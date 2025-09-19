@@ -55,6 +55,7 @@ function App() {
   // Add missing state and constants
   const [fromLanguage, setFromLanguage] = useState('en');
   const [toLanguage, setToLanguage] = useState('vi');
+  const [sentenceLength, setSentenceLength] = useState(3);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isReadingSentence, setIsReadingSentence] = useState(false);
@@ -350,6 +351,40 @@ function App() {
                   <option key={lang.code} value={lang.code}>{lang.name}</option>
                 ))}
               </select>
+            </div>
+            <div className="mb-6">
+              <label className="block text-slate-600 mb-1 font-medium">Length of Sentence</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSentenceLength(Math.max(3, sentenceLength - 1))}
+                  disabled={sentenceLength <= 3}
+                  className="w-8 h-8 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                  </svg>
+                </button>
+                <div className="flex-1 text-center">
+                  <span className="text-lg font-medium text-slate-700 bg-slate-50 px-4 py-2 rounded border border-slate-200">
+                    {sentenceLength} words
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSentenceLength(Math.min(15, sentenceLength + 1))}
+                  disabled={sentenceLength >= 15}
+                  className="w-8 h-8 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <span>Min: 3</span>
+                <span>Max: 15</span>
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-slate-600 mb-1 font-medium">Theme</label>
