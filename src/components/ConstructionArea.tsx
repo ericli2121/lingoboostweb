@@ -19,8 +19,14 @@ export const ConstructionArea: React.FC<ConstructionAreaProps> = ({
   console.log('ConstructionArea completionStatus:', completionStatus);
   
   const handleContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget) return;
+    // Check if the click was on a button element (word buttons)
+    const target = event.target as HTMLElement;
+    const isButton = target.tagName === 'BUTTON' || target.closest('button');
+    
+    // Only trigger empty space click if it wasn't on a button
+    if (isButton) return;
     if (!onEmptySpaceClick) return;
+    
     onEmptySpaceClick();
   };
 

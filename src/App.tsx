@@ -13,6 +13,7 @@ import { GoogleAd } from './components/GoogleAd';
 import { ExplanationModal } from './components/ExplanationModal';
 import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
+import { explainSentence, generateExercisesSimple } from './utils/api';
 
 function App() {
   // Authentication state
@@ -200,41 +201,19 @@ function App() {
       setExplanation('');
       
       try {
-        const baseUrl = import.meta.env.VITE_BASE_URL;
-        const response = await fetch(`${baseUrl}/explain`, {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({
-            sentence: gameState.currentSentence.to,
-            from_language: getLanguageName(fromLanguage),
-            to_language: getLanguageName(toLanguage)
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setExplanation(data.explanation || 'No explanation available.');
+        const explanation = await explainSentence(
+          gameState.currentSentence.to,
+          getLanguageName(fromLanguage),
+          getLanguageName(toLanguage)
+        );
+        setExplanation(explanation);
       } catch (error) {
-        console.error('Error fetching explanation:', error);
-        
-        // Check if it's a CORS error
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-          setExplanation('CORS error: The server needs to be configured to allow requests from this domain. Please contact the administrator to enable CORS for this endpoint.');
-        } else {
-          setExplanation(`Error: ${error.message}. Please try again later.`);
-        }
+        setExplanation(error.message);
       } finally {
         setIsLoadingExplanation(false);
       }
     }
-  }, [gameState, fromLanguage, toLanguage, theme]);
+  }, [gameState, fromLanguage, toLanguage, getLanguageName]);
 
   const handleBack = useCallback(() => {
     const prevIndex = currentIndex > 0 ? currentIndex - 1 : sentenceData.length - 1;
