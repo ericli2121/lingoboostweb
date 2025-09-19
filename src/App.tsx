@@ -101,6 +101,27 @@ function App() {
     initializeGame();
   }, [initializeGame]);
 
+  // Test generateExercisesSimple function on app instantiation
+  useEffect(() => {
+    const testGenerateExercises = async () => {
+      try {
+        console.log('Testing generateExercisesSimple...');
+        const exercises = await generateExercisesSimple(
+          getLanguageName(fromLanguage),
+          getLanguageName(toLanguage),
+          sentenceLength,
+          theme,
+          5 // Generate 5 exercises for testing
+        );
+        console.log('Generated exercises result:', exercises);
+      } catch (error) {
+        console.error('Error testing generateExercisesSimple:', error);
+      }
+    };
+
+    testGenerateExercises();
+  }, []); // Empty dependency array so it only runs once on mount
+
   // Close profile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -247,7 +268,7 @@ function App() {
 
   if (!gameState) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
           <p className="text-slate-600">Loading LingoBoost...</p>
@@ -259,7 +280,7 @@ function App() {
   // Show loading spinner while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-slate-600">Loading...</p>
@@ -271,7 +292,7 @@ function App() {
   // Show login page if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="h-screen bg-slate-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <h1 className="text-3xl font-bold text-slate-800 mb-6">LingoBoost</h1>
           <p className="text-slate-600 mb-8">
@@ -295,7 +316,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
@@ -448,7 +469,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-6 overflow-y-auto">
         <div className="space-y-4">
           {/* English Reference Sentence */}
           <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
@@ -497,15 +518,15 @@ function App() {
           disabled={isReadingSentence}
         />
 
-        {/* Google Ad */}
-        <div className="mt-6 mb-4">
+        {/* Google Ad
+        <div className="mt-6">
           <GoogleAd
             dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT}
             dataAdFormat="auto"
             dataFullWidthResponsive={true}
             style={{ display: 'block', textAlign: 'center' }}
           />
-        </div>
+        </div> */}
       </main>
 
       {/* Modals */}
