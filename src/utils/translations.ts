@@ -463,7 +463,7 @@ export async function getTranslationsForPracticeWithFallback(
       console.log(`✅ [Translations] Found ${existingResult.translations.length} existing translations`);
       
       // Check if we have fewer translations than requested - trigger background generation
-      if (existingResult.translations.length < count) {
+      if (existingResult.translations.length < count * 2) {
         console.log(`📈 [Translations] Have ${existingResult.translations.length} translations but need ${count}, starting background generation...`);
         // Start background generation asynchronously (don't await)
         generateTranslationsInBackground(

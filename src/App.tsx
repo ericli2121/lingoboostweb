@@ -158,7 +158,7 @@ function App() {
       return;
     }
     
-    console.log(`🎮 [App] Initializing game with translation ${currentTranslationIndex + 1}/${translationsQueue.length}`);
+    console.log(`🎮 [App] Initializing game with next translation from queue (${translationsQueue.length} translations remaining)`);
     const translation = translationsQueue[currentTranslationIndex];
     console.log(`🎮 [App] Current sentence: "${translation.from_sentence}" -> "${translation.to_sentence}"`);
     
@@ -306,12 +306,14 @@ function App() {
             );
           }
           
-          // Go to next translation
-          const nextIndex = currentTranslationIndex + 1;
+          // Remove completed translation from queue and stay at index 0
+          console.log(`🗑️ [App] Removing completed translation from queue. Queue length before: ${translationsQueue.length}`);
+          const newQueue = translationsQueue.slice(1); // Remove first element (current translation)
+          setTranslationsQueue(newQueue);
+          console.log(`📚 [App] Queue length after removal: ${newQueue.length}`);
           
-          if (nextIndex < translationsQueue.length) {
-            setCurrentTranslationIndex(nextIndex);
-          }
+          // Keep currentTranslationIndex at 0 since we removed the completed item
+          setCurrentTranslationIndex(0);
           setIsReadingSentence(false);
         });
       } else if (newScrambled.length === 0 && newConstructed.length > 0) {
@@ -325,19 +327,22 @@ function App() {
   }, [gameState, statistics, isReadingSentence, toLanguage, currentTranslationIndex, translationsQueue, user, fromLanguage, getLanguageName]);
 
   const handleNextSentence = useCallback(async () => {
-    const nextIndex = currentTranslationIndex + 1;
-    
-    console.log(`➡️ [App] Going to next sentence - Current index: ${currentTranslationIndex}, Next index: ${nextIndex}`);
-    console.log(`📚 [App] Queue status: ${nextIndex}/${translationsQueue.length} translations`);
+    console.log(`➡️ [App] Manual next sentence requested`);
+    console.log(`📚 [App] Queue status: ${translationsQueue.length} translations remaining`);
     console.log(`📚 [App] Queue contents:`, translationsQueue.map((t, i) => `${i}: "${t.from_sentence}" -> "${t.to_sentence}"`));
     
-    if (nextIndex < translationsQueue.length) {
-      console.log(`✅ [App] Moving to translation ${nextIndex + 1}/${translationsQueue.length}`);
-      setCurrentTranslationIndex(nextIndex);
+    if (translationsQueue.length > 1) {
+      // Remove current translation and move to next
+      console.log(`🗑️ [App] Manually removing current translation from queue`);
+      const newQueue = translationsQueue.slice(1);
+      setTranslationsQueue(newQueue);
+      console.log(`✅ [App] Queue length after manual removal: ${newQueue.length}`);
+      // Index stays at 0 since we removed the first item
+      setCurrentTranslationIndex(0);
     } else {
-      console.log(`⚠️ [App] Reached end of queue - no more translations available`);
+      console.log(`⚠️ [App] No more translations available in queue`);
     }
-  }, [currentTranslationIndex, translationsQueue]);
+  }, [translationsQueue]);
 
   const handleReplay = useCallback(() => {
     initializeGame();
