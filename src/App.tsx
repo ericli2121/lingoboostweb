@@ -65,6 +65,13 @@ function App() {
   const [explanation, setExplanation] = useState('');
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<'correct' | 'incorrect' | null>(null);
+  
+  // Local form state for settings modal (not applied until OK button clicked)
+  const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
+  const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
+  const [localSentenceLength, setLocalSentenceLength] = useState(sentenceLength);
+  const [localTheme, setLocalTheme] = useState(theme);
+  
   const COMMON_LANGUAGES = [
     { code: 'en', name: 'English' },
     { code: 'es', name: 'Spanish' },
@@ -86,7 +93,7 @@ function App() {
   }, []);
   
   // Constants
-  const MIN_TRANSLATIONS_THRESHOLD = 5;
+  const MIN_TRANSLATIONS_THRESHOLD = 3;
   const NUMBER_OF_TRANSLATIONS_TO_LOAD = 5; //20
   const NUMBER_OF_TIMES_CORRECT_NEEDED = 2;
   
@@ -398,6 +405,24 @@ function App() {
     setShowStats(true);
   }, []);
 
+  const handleOpenSettings = useCallback(() => {
+    // Sync local form state with current settings when opening modal
+    setLocalFromLanguage(fromLanguage);
+    setLocalToLanguage(toLanguage);
+    setLocalSentenceLength(sentenceLength);
+    setLocalTheme(theme);
+    setShowSettings(true);
+  }, [fromLanguage, toLanguage, sentenceLength, theme]);
+
+  const handleApplySettings = useCallback(() => {
+    // Apply all settings changes at once
+    setFromLanguage(localFromLanguage);
+    setToLanguage(localToLanguage);
+    setSentenceLength(localSentenceLength);
+    setTheme(localTheme);
+    setShowSettings(false);
+  }, [localFromLanguage, localToLanguage, localSentenceLength, localTheme]);
+
   if (!gameState || isLoadingTranslations) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
@@ -460,11 +485,8 @@ function App() {
               <label className="block text-slate-600 mb-1 font-medium">From Language</label>
               <select
                 className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                value={fromLanguage}
-                onChange={e => {
-                  const lang = e.target.value;
-                  setFromLanguage(lang);
-                }}
+                value={localFromLanguage}
+                onChange={e => setLocalFromLanguage(e.target.value)}
               >
                 {COMMON_LANGUAGES.map(lang => (
                   <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -475,11 +497,8 @@ function App() {
               <label className="block text-slate-600 mb-1 font-medium">To Language</label>
               <select
                 className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                value={toLanguage}
-                onChange={e => {
-                  const lang = e.target.value;
-                  setToLanguage(lang);
-                }}
+                value={localToLanguage}
+                onChange={e => setLocalToLanguage(e.target.value)}
               >
                 {COMMON_LANGUAGES.map(lang => (
                   <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -491,8 +510,8 @@ function App() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setSentenceLength(Math.max(3, sentenceLength - 1))}
-                  disabled={sentenceLength <= 3}
+                  onClick={() => setLocalSentenceLength(Math.max(3, localSentenceLength - 1))}
+                  disabled={localSentenceLength <= 3}
                   className="w-8 h-8 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -501,13 +520,13 @@ function App() {
                 </button>
                 <div className="flex-1 text-center">
                   <span className="text-lg font-medium text-slate-700 bg-slate-50 px-4 py-2 rounded border border-slate-200">
-                    {sentenceLength} words
+                    {localSentenceLength} words
                   </span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSentenceLength(Math.min(15, sentenceLength + 1))}
-                  disabled={sentenceLength >= 15}
+                  onClick={() => setLocalSentenceLength(Math.min(15, localSentenceLength + 1))}
+                  disabled={localSentenceLength >= 15}
                   className="w-8 h-8 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -520,22 +539,30 @@ function App() {
                 <span>Max: 15</span>
               </div>
             </div>
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block text-slate-600 mb-1 font-medium">Theme</label>
               <input
                 type="text"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                value={theme}
-                onChange={e => setTheme(e.target.value)}
+                value={localTheme}
+                onChange={e => setLocalTheme(e.target.value)}
                 placeholder="Enter theme (e.g., animals, food, travel)"
               />
             </div>
-            <button
-              className="w-full py-2 px-4 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600"
-              onClick={() => setShowSettings(false)}
-            >
-              Close
-            </button>
+            <div className="flex gap-2">
+              <button
+                className="flex-1 py-2 px-4 rounded-lg border border-slate-300 text-slate-600 font-semibold hover:bg-slate-50"
+                onClick={() => setShowSettings(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="flex-1 py-2 px-4 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600"
+                onClick={handleApplySettings}
+              >
+                OK
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -591,7 +618,7 @@ function App() {
             <button
               className="p-2 rounded-full hover:bg-slate-100 focus:outline-none"
               aria-label="Settings"
-              onClick={() => setShowSettings(true)}
+              onClick={handleOpenSettings}
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
