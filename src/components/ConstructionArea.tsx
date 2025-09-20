@@ -16,7 +16,6 @@ export const ConstructionArea: React.FC<ConstructionAreaProps> = ({
   onEmptySpaceClick,
   completionStatus
 }) => {
-  console.log('ConstructionArea completionStatus:', completionStatus);
   
   const handleContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
     // Check if the click was on a button element (word buttons)

@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { useState, useEffect, useCallback } from 'react';
-import { sentenceData } from './data/sentences';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Statistics } from './types';
 import { initializeGameState, checkCompletion, moveWordToConstruction, removeWordFromConstruction } from './utils/gameLogic';
 import { speechService } from './utils/speech';
-import { loadStatistics, saveStatistics, loadCurrentIndex, saveCurrentIndex } from './utils/storage';
+import { loadStatistics, saveStatistics } from './utils/storage';
 import { WordButton } from './components/WordButton';
 import { ConstructionArea } from './components/ConstructionArea';
 import { ActionButtons } from './components/ActionButtons';
@@ -13,7 +12,8 @@ import { GoogleAd } from './components/GoogleAd';
 import { ExplanationModal } from './components/ExplanationModal';
 import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
-import { explainSentence, generateExercisesSimple } from './utils/api';
+import { explainSentence } from './utils/api';
+import { getTranslationsForPracticeWithFallback, incrementTranslationCorrectCount, Translation } from './utils/translations';
 
 function App() {
   // Authentication state
@@ -84,43 +84,153 @@ function App() {
   const getLanguageName = useCallback((code: string) => {
     return COMMON_LANGUAGES.find(lang => lang.code === code)?.name || code;
   }, []);
+  
+  // Constants
+  const MIN_TRANSLATIONS_THRESHOLD = 5;
+  const NUMBER_OF_TRANSLATIONS_TO_LOAD = 5; //20
+  const NUMBER_OF_TIMES_CORRECT_NEEDED = 2;
+  
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [statistics, setStatistics] = useState<Statistics>(loadStatistics());
   const [showStats, setShowStats] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(loadCurrentIndex());
-  // Removed voice selection
+  const [translationsQueue, setTranslationsQueue] = useState<Translation[]>([]);
+  const [currentTranslationIndex, setCurrentTranslationIndex] = useState(0);
+  const [isLoadingTranslations, setIsLoadingTranslations] = useState(false);
+  const hasInitiallyLoaded = useRef(false);
+
+  // Load translations when user is authenticated and settings change
+  const loadTranslations = useCallback(async (appendToQueue = false) => {
+    if (!user) return;
+    
+    console.log(`🔄 [App] Starting loadTranslations - appendToQueue: ${appendToQueue}`);
+    console.log(`🔄 [App] Parameters: from=${getLanguageName(fromLanguage)}, to=${getLanguageName(toLanguage)}, count=${NUMBER_OF_TRANSLATIONS_TO_LOAD}, length=${sentenceLength}, theme="${theme}"`);
+    
+    setIsLoadingTranslations(true);
+    try {
+      const result = await getTranslationsForPracticeWithFallback(
+        user.id,
+        getLanguageName(fromLanguage),
+        getLanguageName(toLanguage),
+        NUMBER_OF_TRANSLATIONS_TO_LOAD,
+        sentenceLength,
+        theme,
+        NUMBER_OF_TIMES_CORRECT_NEEDED
+      );
+
+      if (result.error) {
+        console.error('❌ [App] Error loading translations:', result.error);
+        if (!appendToQueue) {
+          setTranslationsQueue([]);
+        }
+      } else {
+        console.log(`✅ [App] Loaded ${result.translations.length} translations`);
+        if (result.generatedNew) {
+          console.log('🆕 [App] Generated new translations from API');
+        } else {
+          console.log('💾 [App] Used existing translations from database');
+        }
+        
+        if (appendToQueue) {
+          // Add to existing queue
+          console.log(`📝 [App] Appending ${result.translations.length} translations to existing queue`);
+          setTranslationsQueue(prev => [...prev, ...result.translations]);
+        } else {
+          // Replace queue and reset index
+          console.log(`🔄 [App] Replacing queue with ${result.translations.length} translations`);
+          setTranslationsQueue(result.translations);
+          setCurrentTranslationIndex(0);
+        }
+      }
+    } catch (error) {
+      console.error('❌ [App] Error loading translations:', error);
+      if (!appendToQueue) {
+        setTranslationsQueue([]);
+      }
+    } finally {
+      setIsLoadingTranslations(false);
+      console.log('✅ [App] loadTranslations completed');
+    }
+  }, [user, fromLanguage, toLanguage, sentenceLength, theme, getLanguageName]);
 
   const initializeGame = useCallback(() => {
-    const sentence = sentenceData[currentIndex];
-    const newGameState = initializeGameState(sentence, currentIndex);
+    if (translationsQueue.length === 0) {
+      console.log('⚠️ [App] Cannot initialize game - translation queue is empty');
+      return;
+    }
+    
+    console.log(`🎮 [App] Initializing game with translation ${currentTranslationIndex + 1}/${translationsQueue.length}`);
+    const translation = translationsQueue[currentTranslationIndex];
+    console.log(`🎮 [App] Current sentence: "${translation.from_sentence}" -> "${translation.to_sentence}"`);
+    
+    const sentence = {
+      from: translation.from_sentence,
+      to: translation.to_sentence
+    };
+    const newGameState = initializeGameState(sentence, currentTranslationIndex);
     setGameState(newGameState);
     setCompletionStatus(null); // Reset completion status
-  }, [currentIndex]);
+    console.log('✅ [App] Game initialized successfully');
+  }, [translationsQueue, currentTranslationIndex]);
 
+  // Load translations when user first authenticates
   useEffect(() => {
-    initializeGame();
-  }, [initializeGame]);
+    if (user && !hasInitiallyLoaded.current) {
+      console.log('🚀 [App] Initial load - user authenticated and no translations in queue');
+      hasInitiallyLoaded.current = true;
+      loadTranslations();
+    }
+  }, [user]);
 
-  // Test generateExercisesSimple function on app instantiation
+  // Reload translations when settings change (clear queue and reload)
   useEffect(() => {
-    const testGenerateExercises = async () => {
-      try {
-        console.log('Testing generateExercisesSimple...');
-        const exercises = await generateExercisesSimple(
-          getLanguageName(fromLanguage),
-          getLanguageName(toLanguage),
-          sentenceLength,
-          theme,
-          5 // Generate 5 exercises for testing
-        );
-        console.log('Generated exercises result:', exercises);
-      } catch (error) {
-        console.error('Error testing generateExercisesSimple:', error);
-      }
-    };
+    if (user && hasInitiallyLoaded.current) {
+      console.log('⚙️ [App] Settings changed - clearing queue and reloading translations');
+      console.log(`⚙️ [App] New settings: from=${fromLanguage}, to=${toLanguage}, length=${sentenceLength}, theme="${theme}"`);
+      setTranslationsQueue([]);
+      setCurrentTranslationIndex(0);
+      loadTranslations();
+    }
+  }, [fromLanguage, toLanguage, sentenceLength, theme]);
 
-    testGenerateExercises();
-  }, []); // Empty dependency array so it only runs once on mount
+  // Check if we need more translations when queue gets low or is empty
+  useEffect(() => {
+    console.log(`translation queue length ${translationsQueue.length}`);
+    if (user && translationsQueue.length <= MIN_TRANSLATIONS_THRESHOLD && !isLoadingTranslations) {
+      console.log(`📉 [App] Queue needs replenishment - ${translationsQueue.length} translations remaining (threshold: ${MIN_TRANSLATIONS_THRESHOLD}), loading more`);
+      loadTranslations(translationsQueue.length > 0); // Append if queue has items, replace if empty
+    }
+  }, [translationsQueue.length, user, isLoadingTranslations, loadTranslations]);
+
+  // Initialize game when translations are loaded
+  useEffect(() => {
+    if (translationsQueue.length > 0) {
+      console.log(`🎮 [App] Translations loaded, initializing game with ${translationsQueue.length} translations`);
+      initializeGame();
+    } else {
+      console.log('⏳ [App] Waiting for translations to load...');
+    }
+  }, [translationsQueue, currentTranslationIndex, initializeGame]);
+
+  // Remove the old test function
+  // useEffect(() => {
+  //   const testGenerateExercises = async () => {
+  //     try {
+  //       console.log('Testing generateExercisesSimple...');
+  //       const exercises = await generateExercisesSimple(
+  //         getLanguageName(fromLanguage),
+  //         getLanguageName(toLanguage),
+  //         sentenceLength,
+  //         theme,
+  //         5 // Generate 5 exercises for testing
+  //       );
+  //       console.log('Generated exercises result:', exercises);
+  //     } catch (error) {
+  //       console.error('Error testing generateExercisesSimple:', error);
+  //     }
+  //   };
+
+  //   testGenerateExercises();
+  // }, []); // Empty dependency array so it only runs once on mount
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -173,7 +283,6 @@ function App() {
       // Check for completion
       if (isCompleted) {
         setCompletionStatus('correct');
-        console.log('Setting completion status to correct');
         const newStats = {
           ...statistics,
           sentencesCompleted: statistics.sentencesCompleted + 1,
@@ -186,30 +295,49 @@ function App() {
         setIsReadingSentence(true);
         
         // Speak the completed sentence and auto-advance when finished
-        speechService.speak(gameState.currentSentence.to, toLanguage, () => {
-          // When speech finishes, go to next sentence
-          const nextIndex = (currentIndex + 1) % sentenceData.length;
-          setCurrentIndex(nextIndex);
-          saveCurrentIndex(nextIndex);
+        speechService.speak(gameState.currentSentence.to, toLanguage, async () => {
+          // When speech finishes, increment correct count and go to next sentence
+          if (user && gameState) {
+            await incrementTranslationCorrectCount(
+              user.id,
+              getLanguageName(fromLanguage),
+              getLanguageName(toLanguage),
+              gameState.currentSentence.from
+            );
+          }
+          
+          // Go to next translation
+          const nextIndex = currentTranslationIndex + 1;
+          
+          if (nextIndex < translationsQueue.length) {
+            setCurrentTranslationIndex(nextIndex);
+          }
           setIsReadingSentence(false);
         });
       } else if (newScrambled.length === 0 && newConstructed.length > 0) {
         // All words used but sentence is incorrect
         setCompletionStatus('incorrect');
-        console.log('Setting completion status to incorrect');
       } else {
         // Reset status if not all words are used
         setCompletionStatus(null);
-        console.log('Resetting completion status');
       }
     }
-  }, [gameState, statistics, isReadingSentence, toLanguage, currentIndex]);
+  }, [gameState, statistics, isReadingSentence, toLanguage, currentTranslationIndex, translationsQueue, user, fromLanguage, getLanguageName]);
 
-  const handleNextSentence = useCallback(() => {
-    const nextIndex = (currentIndex + 1) % sentenceData.length;
-    setCurrentIndex(nextIndex);
-    saveCurrentIndex(nextIndex);
-  }, [currentIndex]);
+  const handleNextSentence = useCallback(async () => {
+    const nextIndex = currentTranslationIndex + 1;
+    
+    console.log(`➡️ [App] Going to next sentence - Current index: ${currentTranslationIndex}, Next index: ${nextIndex}`);
+    console.log(`📚 [App] Queue status: ${nextIndex}/${translationsQueue.length} translations`);
+    console.log(`📚 [App] Queue contents:`, translationsQueue.map((t, i) => `${i}: "${t.from_sentence}" -> "${t.to_sentence}"`));
+    
+    if (nextIndex < translationsQueue.length) {
+      console.log(`✅ [App] Moving to translation ${nextIndex + 1}/${translationsQueue.length}`);
+      setCurrentTranslationIndex(nextIndex);
+    } else {
+      console.log(`⚠️ [App] Reached end of queue - no more translations available`);
+    }
+  }, [currentTranslationIndex, translationsQueue]);
 
   const handleReplay = useCallback(() => {
     initializeGame();
@@ -237,10 +365,9 @@ function App() {
   }, [gameState, fromLanguage, toLanguage, getLanguageName]);
 
   const handleBack = useCallback(() => {
-    const prevIndex = currentIndex > 0 ? currentIndex - 1 : sentenceData.length - 1;
-    setCurrentIndex(prevIndex);
-    saveCurrentIndex(prevIndex);
-  }, [currentIndex]);
+    const prevIndex = currentTranslationIndex > 0 ? currentTranslationIndex - 1 : 0;
+    setCurrentTranslationIndex(prevIndex);
+  }, [currentTranslationIndex]);
 
   const handleRevealAnswer = useCallback(() => {
     if (gameState) {
@@ -266,12 +393,14 @@ function App() {
     setShowStats(true);
   }, []);
 
-  if (!gameState) {
+  if (!gameState || isLoadingTranslations) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
-          <p className="text-slate-600">Loading LingoBoost...</p>
+          <p className="text-slate-600">
+            {isLoadingTranslations ? 'Loading your practice sentences...' : 'Loading LingoBoost...'}
+          </p>
         </div>
       </div>
     );
@@ -296,7 +425,7 @@ function App() {
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <h1 className="text-3xl font-bold text-slate-800 mb-6">LingoBoost</h1>
           <p className="text-slate-600 mb-8">
-            Practice language exercises and track your progress. Sign in to get started.
+            Practice language by rapid sentence construction and track your progress. Sign in to get started.
           </p>
           <button
             onClick={signInWithGoogle}
