@@ -216,7 +216,7 @@ export const generateThemeQueue = async (
     toLanguage,
     sentenceLength,
     theme,
-    20
+    5
   );
   
   if (uniqueExercises.length === 0) {
