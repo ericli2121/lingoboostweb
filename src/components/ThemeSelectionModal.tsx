@@ -24,7 +24,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
     if (isOpen) {
       loadSuggestedThemes();
     }
-  }, [isOpen, toLanguage]);
+  }, [isOpen]);
 
   const loadSuggestedThemes = async () => {
     setIsLoadingThemes(true);

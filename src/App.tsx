@@ -431,7 +431,26 @@ function App() {
     setSentenceLength(localSentenceLength);
     setTheme(localTheme);
     setShowSettings(false);
-  }, [localFromLanguage, localToLanguage, localSentenceLength, localTheme]);
+    
+    // If a theme was specified in settings, generate exercises directly
+    if (localTheme.trim()) {
+      console.log('⚙️ [Settings] Applied new settings, generating exercises for theme:', localTheme);
+      // Clear existing queue first to trigger loading screen
+      setTranslationsQueue([]);
+      setCurrentTranslationIndex(0);
+      setGameState(null);
+      // Generate new queue which will show loading screen
+      generateQueueForTheme(localTheme);
+    } else {
+      // If no theme specified, clear queue and show theme selection
+      setTranslationsQueue([]);
+      setCurrentTranslationIndex(0);
+      setCurrentTheme('');
+      setGameState(null);
+      setShowThemeSelection(true);
+      console.log('⚙️ [Settings] Applied new settings, no theme specified - showing theme selection');
+    }
+  }, [localFromLanguage, localToLanguage, localSentenceLength, localTheme, generateQueueForTheme]);
 
   const handleThemeSelected = useCallback((theme: string) => {
     console.log(`🎨 [App] Theme selected: "${theme}"`);
