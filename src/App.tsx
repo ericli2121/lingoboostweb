@@ -56,7 +56,7 @@ function App() {
 
   // Add missing state and constants
   const [fromLanguage, setFromLanguage] = useState('en');
-  const [toLanguage, setToLanguage] = useState('vi');
+  const [toLanguage, setToLanguage] = useState('es');
   const [sentenceLength, setSentenceLength] = useState(3);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isReadingSentence, setIsReadingSentence] = useState(false);
@@ -660,8 +660,8 @@ function App() {
         isOpen={showThemeSelection}
         onClose={handleThemeSelectionClose}
         onSelectTheme={handleThemeSelected}
-        toLanguage={getLanguageName(toLanguage)}
-        fromLanguage={getLanguageName(fromLanguage)}
+        toLanguage={toLanguage}
+        fromLanguage={fromLanguage}
         sentenceLength={sentenceLength}
         availableLanguages={COMMON_LANGUAGES}
       />

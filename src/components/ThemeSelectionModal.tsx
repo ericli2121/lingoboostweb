@@ -57,14 +57,29 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
     }
   };
 
+  // Validation function to check if languages are different
+  const areLanguagesDifferent = () => {
+    return localFromLanguage !== localToLanguage;
+  };
+
   const handleSelectCustomTheme = () => {
-    if (customTheme.trim()) {
-      onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength);
-      setCustomTheme('');
+    if (!customTheme.trim()) return;
+    
+    if (!areLanguagesDifferent()) {
+      alert('Please select different languages for "From" and "To" fields.');
+      return;
     }
+    
+    onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength);
+    setCustomTheme('');
   };
 
   const handleSelectSuggestedTheme = (theme: string) => {
+    if (!areLanguagesDifferent()) {
+      alert('Please select different languages for "From" and "To" fields.');
+      return;
+    }
+    
     onSelectTheme(theme, localFromLanguage, localToLanguage, localSentenceLength);
   };
 
@@ -122,6 +137,13 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
             </div>
           </div>
 
+          {/* Language Validation Warning */}
+          {!areLanguagesDifferent() && (
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+              ⚠️ Please select different languages for "From" and "To" fields. You cannot translate between the same language.
+            </div>
+          )}
+
           {/* Sentence Length */}
           <div className="mb-4">
             <label className="block text-slate-700 text-sm font-medium mb-1">
@@ -168,7 +190,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               />
               <button
                 onClick={handleSelectCustomTheme}
-                disabled={!customTheme.trim()}
+                disabled={!customTheme.trim() || !areLanguagesDifferent()}
                 className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Use
@@ -193,7 +215,12 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                   <button
                     key={index}
                     onClick={() => handleSelectSuggestedTheme(theme)}
-                    className="w-full text-left p-2 text-sm border border-slate-200 rounded hover:bg-slate-50 hover:border-blue-300 transition-colors duration-200"
+                    disabled={!areLanguagesDifferent()}
+                    className={`w-full text-left p-2 text-sm border border-slate-200 rounded transition-colors duration-200 ${
+                      !areLanguagesDifferent() 
+                        ? 'opacity-50 cursor-not-allowed bg-slate-100' 
+                        : 'hover:bg-slate-50 hover:border-blue-300'
+                    }`}
                   >
                     <span className="text-slate-700">{theme}</span>
                   </button>
