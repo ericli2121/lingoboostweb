@@ -46,6 +46,67 @@ export interface Exercise {
   words: string[];
 }
 
+export interface ThemeResponse {
+  success: boolean;
+  themes: string[];
+  language: string;
+  count: number;
+  total_generated: number;
+}
+
+export const generateThemes = async (
+  language: string,
+  count: number = 5
+): Promise<string[]> => {
+  try {
+    const baseUrl = import.meta.env.VITE_BASE_URL;
+    const response = await fetch(`${baseUrl}/generate_themes`, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        language,
+        count
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: ThemeResponse = await response.json();
+    return data.themes || [];
+  } catch (error) {
+    console.error('Error generating themes:', error);
+    
+    // Return mock themes for testing when API is not available
+    console.log('🎨 [API] Using mock themes since API is not available');
+    
+    const mockThemes = [
+      "cute animals and their baby names",
+      "adjectives to describe personality traits", 
+      "conditional sentences about imaginary situations",
+      "phrases using 'it is too ___ to ___'",
+      "questions using the five W words (who, what, when, where, why)",
+      "present continuous tense for describing current activities",
+      "comparisons between city and countryside life",
+      "past tense stories about childhood memories",
+      "polite requests and formal language",
+      "weather expressions and seasonal activities",
+      "food textures and flavors vocabulary",
+      "emotions and feelings in different contexts",
+      "travel vocabulary for airport situations",
+      "family relationships and kinship terms",
+      "workplace communication phrases"
+    ];
+    
+    return mockThemes.slice(0, count);
+  }
+};
+
 export const generateExercisesSimple = async (
   fromLanguage: string,
   toLanguage: string,
@@ -136,4 +197,50 @@ export const generateExercisesSimple = async (
     console.log(`🤖 [API] Generated ${mockExercises.length} mock exercises`);
     return mockExercises;
   }
+};
+
+/**
+ * Generate a theme-based queue of 60 exercises (20 unique sentences, each repeated 3 times)
+ */
+export const generateThemeQueue = async (
+  fromLanguage: string,
+  toLanguage: string,
+  sentenceLength: number,
+  theme: string
+): Promise<Exercise[]> => {
+  console.log(`🎨 [API] Generating theme queue for: "${theme}"`);
+  
+  // Generate exactly 20 unique exercises
+  const uniqueExercises = await generateExercisesSimple(
+    fromLanguage,
+    toLanguage,
+    sentenceLength,
+    theme,
+    20
+  );
+  
+  if (uniqueExercises.length === 0) {
+    throw new Error('Failed to generate exercises for theme');
+  }
+  
+  // Create queue with each exercise repeated 3 times (total 60)
+  const queue: Exercise[] = [];
+  
+  for (let repetition = 0; repetition < 3; repetition++) {
+    for (const exercise of uniqueExercises) {
+      queue.push({
+        ...exercise,
+        id: `${exercise.id}-rep${repetition + 1}` // Unique ID for each repetition
+      });
+    }
+  }
+  
+  // Shuffle the queue so repetitions are not consecutive
+  for (let i = queue.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [queue[i], queue[j]] = [queue[j], queue[i]];
+  }
+  
+  console.log(`✅ [API] Generated theme queue with ${queue.length} exercises (${uniqueExercises.length} unique × 3 repetitions)`);
+  return queue;
 };

@@ -10,10 +10,11 @@ import { ActionButtons } from './components/ActionButtons';
 import { StatisticsModal } from './components/StatisticsModal';
 import { GoogleAd } from './components/GoogleAd';
 import { ExplanationModal } from './components/ExplanationModal';
+import { ThemeSelectionModal } from './components/ThemeSelectionModal';
 import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
 import { explainSentence } from './utils/api';
-import { getTranslationsForPracticeWithFallback, incrementTranslationCorrectCount, Translation } from './utils/translations';
+import { generateNewThemeQueue, saveCompletedSentence, Translation } from './utils/translations';
 
 function App() {
   // Authentication state
@@ -71,6 +72,10 @@ function App() {
   const [isCallingAI, setIsCallingAI] = useState(false);
   const [isLoadingFromDB, setIsLoadingFromDB] = useState(false);
   
+  // Theme selection modal state
+  const [showThemeSelection, setShowThemeSelection] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('');
+  
   // Local form state for settings modal (not applied until OK button clicked)
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
   const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
@@ -97,11 +102,6 @@ function App() {
     return COMMON_LANGUAGES.find(lang => lang.code === code)?.name || code;
   }, []);
   
-  // Constants
-  const MIN_TRANSLATIONS_THRESHOLD = 3;
-  const NUMBER_OF_TRANSLATIONS_TO_LOAD = 5; //20
-  const NUMBER_OF_TIMES_CORRECT_NEEDED = 2;
-  
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [statistics, setStatistics] = useState<Statistics>(loadStatistics());
   const [showStats, setShowStats] = useState(false);
@@ -110,62 +110,44 @@ function App() {
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(false);
   const hasInitiallyLoaded = useRef(false);
 
-  // Load translations when user is authenticated and settings change
-  const loadTranslations = useCallback(async (appendToQueue = false) => {
+  // Generate new theme-based queue
+  const generateQueueForTheme = useCallback(async (selectedTheme: string) => {
     if (!user) return;
     
-    console.log(`🔄 [App] Starting loadTranslations - appendToQueue: ${appendToQueue}`);
-    console.log(`🔄 [App] Parameters: from=${getLanguageName(fromLanguage)}, to=${getLanguageName(toLanguage)}, count=${NUMBER_OF_TRANSLATIONS_TO_LOAD}, length=${sentenceLength}, theme="${theme}"`);
+    console.log(`🎨 [App] Generating queue for theme: "${selectedTheme}"`);
     
     setIsLoadingTranslations(true);
-    setIsLoadingFromDB(true);
+    setCurrentTheme(selectedTheme);
+    
     try {
-      const result = await getTranslationsForPracticeWithFallback(
+      const result = await generateNewThemeQueue(
         user.id,
         getLanguageName(fromLanguage),
         getLanguageName(toLanguage),
-        NUMBER_OF_TRANSLATIONS_TO_LOAD,
         sentenceLength,
-        theme,
-        NUMBER_OF_TIMES_CORRECT_NEEDED,
+        selectedTheme,
         setIsCallingAI
       );
 
       if (result.error) {
-        console.error('❌ [App] Error loading translations:', result.error);
-        if (!appendToQueue) {
-          setTranslationsQueue([]);
-        }
+        console.error('❌ [App] Error generating theme queue:', result.error);
+        setTranslationsQueue([]);
+        // Show theme selection again on error
+        setShowThemeSelection(true);
       } else {
-        console.log(`✅ [App] Loaded ${result.translations.length} translations`);
-        if (result.generatedNew) {
-          console.log('🆕 [App] Generated new translations from API');
-        } else {
-          console.log('💾 [App] Used existing translations from database');
-        }
-        
-        if (appendToQueue) {
-          // Add to existing queue
-          console.log(`📝 [App] Appending ${result.translations.length} translations to existing queue`);
-          setTranslationsQueue(prev => [...prev, ...result.translations]);
-        } else {
-          // Replace queue and reset index
-          console.log(`🔄 [App] Replacing queue with ${result.translations.length} translations`);
-          setTranslationsQueue(result.translations);
-          setCurrentTranslationIndex(0);
-        }
+        console.log(`✅ [App] Generated queue with ${result.translations.length} translations for theme: "${selectedTheme}"`);
+        setTranslationsQueue(result.translations);
+        setCurrentTranslationIndex(0);
+        setShowThemeSelection(false);
       }
     } catch (error) {
-      console.error('❌ [App] Error loading translations:', error);
-      if (!appendToQueue) {
-        setTranslationsQueue([]);
-      }
+      console.error('❌ [App] Error generating theme queue:', error);
+      setTranslationsQueue([]);
+      setShowThemeSelection(true);
     } finally {
       setIsLoadingTranslations(false);
-      setIsLoadingFromDB(false);
-      console.log('✅ [App] loadTranslations completed');
     }
-  }, [user, fromLanguage, toLanguage, sentenceLength, theme, getLanguageName]);
+  }, [user, fromLanguage, toLanguage, sentenceLength, getLanguageName]);
 
   const initializeGame = useCallback(() => {
     if (translationsQueue.length === 0) {
@@ -187,34 +169,35 @@ function App() {
     console.log('✅ [App] Game initialized successfully');
   }, [translationsQueue, currentTranslationIndex]);
 
-  // Load translations when user first authenticates
+  // Show theme selection when user first authenticates
   useEffect(() => {
     if (user && !hasInitiallyLoaded.current) {
-      console.log('🚀 [App] Initial load - user authenticated and no translations in queue');
+      console.log('🚀 [App] Initial load - user authenticated, showing theme selection');
       hasInitiallyLoaded.current = true;
-      loadTranslations();
+      setShowThemeSelection(true);
     }
   }, [user]);
 
-  // Reload translations when settings change (clear queue and reload)
+  // Clear queue when settings change
   useEffect(() => {
     if (user && hasInitiallyLoaded.current) {
-      console.log('⚙️ [App] Settings changed - clearing queue and reloading translations');
-      console.log(`⚙️ [App] New settings: from=${fromLanguage}, to=${toLanguage}, length=${sentenceLength}, theme="${theme}"`);
+      console.log('⚙️ [App] Settings changed - clearing queue');
+      console.log(`⚙️ [App] New settings: from=${fromLanguage}, to=${toLanguage}, length=${sentenceLength}`);
       setTranslationsQueue([]);
       setCurrentTranslationIndex(0);
-      loadTranslations();
+      setCurrentTheme('');
+      // Show theme selection for new settings
+      setShowThemeSelection(true);
     }
-  }, [fromLanguage, toLanguage, sentenceLength, theme]);
+  }, [fromLanguage, toLanguage, sentenceLength]);
 
-  // Check if we need more translations when queue gets low or is empty
+  // Show theme selection when queue is empty
   useEffect(() => {
-    console.log(`translation queue length ${translationsQueue.length}`);
-    if (user && translationsQueue.length <= MIN_TRANSLATIONS_THRESHOLD && !isLoadingTranslations) {
-      console.log(`📉 [App] Queue needs replenishment - ${translationsQueue.length} translations remaining (threshold: ${MIN_TRANSLATIONS_THRESHOLD}), loading more`);
-      loadTranslations(translationsQueue.length > 0); // Append if queue has items, replace if empty
+    if (user && translationsQueue.length === 0 && !isLoadingTranslations && hasInitiallyLoaded.current) {
+      console.log('� [App] Queue is empty - showing theme selection');
+      setShowThemeSelection(true);
     }
-  }, [translationsQueue.length, user, isLoadingTranslations, loadTranslations]);
+  }, [translationsQueue.length, user, isLoadingTranslations]);
 
   // Initialize game when translations are loaded
   useEffect(() => {
@@ -311,13 +294,15 @@ function App() {
         
         // Speak the completed sentence and auto-advance when finished
         speechService.speak(gameState.currentSentence.to, toLanguage, async () => {
-          // When speech finishes, increment correct count and go to next sentence
+          // When speech finishes, save completed sentence to database
           if (user && gameState) {
-            await incrementTranslationCorrectCount(
+            await saveCompletedSentence(
               user.id,
               getLanguageName(fromLanguage),
               getLanguageName(toLanguage),
-              gameState.currentSentence.from
+              gameState.currentSentence.from,
+              gameState.currentSentence.to,
+              currentTheme
             );
           }
           
@@ -339,7 +324,7 @@ function App() {
         setCompletionStatus(null);
       }
     }
-  }, [gameState, statistics, isReadingSentence, toLanguage, currentTranslationIndex, translationsQueue, user, fromLanguage, getLanguageName]);
+  }, [gameState, statistics, isReadingSentence, toLanguage, currentTranslationIndex, translationsQueue, user, fromLanguage, getLanguageName, currentTheme]);
 
   const handleNextSentence = useCallback(async () => {
     console.log(`➡️ [App] Manual next sentence requested`);
@@ -431,13 +416,23 @@ function App() {
     setShowSettings(false);
   }, [localFromLanguage, localToLanguage, localSentenceLength, localTheme]);
 
-  if (!gameState || (isLoadingTranslations && translationsQueue.length === 0)) {
+  const handleThemeSelected = useCallback((theme: string) => {
+    console.log(`🎨 [App] Theme selected: "${theme}"`);
+    generateQueueForTheme(theme);
+  }, [generateQueueForTheme]);
+
+  const handleThemeSelectionClose = useCallback(() => {
+    setShowThemeSelection(false);
+  }, []);
+
+  // Only show loading screen when actively generating translations
+  if (isLoadingTranslations && translationsQueue.length === 0) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
           <p className="text-slate-600">
-            {isLoadingTranslations ? 'Loading your practice sentences...' : 'Loading LingoBoost...'}
+            {`Generating ${currentTheme ? `"${currentTheme}"` : 'themed'} practice sentences...`}
           </p>
         </div>
       </div>
@@ -574,6 +569,7 @@ function App() {
           </div>
         </div>
       )}
+      
       {/* Header with settings */}
       <header className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -587,6 +583,9 @@ function App() {
             {showDebugInfo && (
               <div className="text-xs text-slate-500 mt-1 space-y-1">
                 <p>Queue length: {translationsQueue.length}</p>
+                {currentTheme && (
+                  <p>Current theme: "{currentTheme}"</p>
+                )}
                 {isCallingAI && (
                   <p className="text-blue-600 font-medium">🤖 AI generating exercises...</p>
                 )}
@@ -650,53 +649,69 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl mx-auto px-4 py-6 overflow-y-auto">
-        <div className="space-y-4">
-          {/* English Reference Sentence */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
-            <p className="text-xl text-slate-700">{gameState.currentSentence.from}</p>
-          </div>
+        {gameState ? (
+          <div className="space-y-4">
+            {/* English Reference Sentence */}
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
+              <p className="text-xl text-slate-700">{gameState.currentSentence.from}</p>
+            </div>
 
-          {/* Construction Area */}
-          <ConstructionArea
-            words={gameState.constructedWords}
-            onWordClick={handleWordClick}
-            isEmpty={gameState.constructedWords.length === 0}
-            onEmptySpaceClick={handleConstructionEmptyClick}
-            completionStatus={completionStatus}
+            {/* Construction Area */}
+            <ConstructionArea
+              words={gameState.constructedWords}
+              onWordClick={handleWordClick}
+              isEmpty={gameState.constructedWords.length === 0}
+              onEmptySpaceClick={handleConstructionEmptyClick}
+              completionStatus={completionStatus}
+            />
+
+            {/* Answer Display */}
+            {gameState.showAnswer && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                <h3 className="text-sm font-medium text-green-800 mb-2">Answer:</h3>
+                <p className="text-lg text-green-700">{gameState.currentSentence.to}</p>
+              </div>
+            )}
+
+            {/* Words */}
+            <div className="mt-2">
+              <div className="flex flex-wrap gap-2 min-h-24 items-center">
+                {gameState.scrambledWords.map((word, index) => (
+                  <div key={word}>
+                    <WordButton
+                      word={word}
+                      onClick={handleWordClick}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-slate-800 mb-4">Welcome to LingoBoost!</h2>
+              <p className="text-slate-600 mb-6">
+                {translationsQueue.length === 0 
+                  ? "Choose a theme to start practicing with 60 themed sentences."
+                  : "Loading your practice session..."
+                }
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons - only show when gameState exists */}
+        {gameState && (
+          <ActionButtons
+            onExplain={handleExplain}
+            onBack={handleBack}
+            onRevealAnswer={handleRevealAnswer}
+            onStatistics={handleStatistics}
+            showAnswer={gameState.showAnswer}
+            disabled={isReadingSentence}
           />
-
-          {/* Answer Display */}
-          {gameState.showAnswer && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-              <h3 className="text-sm font-medium text-green-800 mb-2">Answer:</h3>
-              <p className="text-lg text-green-700">{gameState.currentSentence.to}</p>
-            </div>
-          )}
-
-          {/* Words */}
-          <div className="mt-2">
-            <div className="flex flex-wrap gap-2 min-h-24 items-center">
-              {gameState.scrambledWords.map((word, index) => (
-                <div key={word}>
-                  <WordButton
-                    word={word}
-                    onClick={handleWordClick}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <ActionButtons
-          onExplain={handleExplain}
-          onBack={handleBack}
-          onRevealAnswer={handleRevealAnswer}
-          onStatistics={handleStatistics}
-          showAnswer={gameState.showAnswer}
-          disabled={isReadingSentence}
-        />
+        )}
 
         {/* Google Ad
         <div className="mt-6">
@@ -721,6 +736,13 @@ function App() {
         onClose={() => setShowExplanation(false)}
         explanation={explanation}
         isLoading={isLoadingExplanation}
+      />
+
+      <ThemeSelectionModal
+        isOpen={showThemeSelection}
+        onClose={handleThemeSelectionClose}
+        onSelectTheme={handleThemeSelected}
+        toLanguage={getLanguageName(toLanguage)}
       />
     </div>
   );

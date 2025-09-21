@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { generateExercisesSimple } from './api';
+import { generateThemeQueue, generateExercisesSimple } from './api';
 
 // Track ongoing background generation to prevent duplicate calls
 const ongoingGenerations = new Map<string, Promise<void>>();
@@ -7,6 +7,18 @@ const ongoingGenerations = new Map<string, Promise<void>>();
 export interface Translation {
   from_sentence: string;
   to_sentence: string;
+}
+
+export interface CompletedSentenceRecord {
+  id?: number;
+  created_at?: string;
+  user_id: string;
+  from_language: string;
+  to_language: string;
+  from_sentence: string;
+  to_sentence: string;
+  theme?: string;
+  completion_time_ms?: number;
 }
 
 export interface TranslationRecord {
@@ -229,53 +241,128 @@ export async function updateTranslationCorrectCount(
 }
 
 /**
- * Increment the correct count by 1 for a translation
+ * Save a completed sentence as a record in the database
  */
-export async function incrementTranslationCorrectCount(
+export async function saveCompletedSentence(
   userId: string,
   fromLanguage: string,
   toLanguage: string,
-  fromSentence: string
+  fromSentence: string,
+  toSentence: string,
+  theme?: string,
+  completionTimeMs?: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // First get the current count for the specific translation
-    const { data: current, error: fetchError } = await supabase
-      .from('translations')
-      .select('number_of_times_correct')
-      .eq('user_id', userId)
-      .eq('from_language', fromLanguage)
-      .eq('to_language', toLanguage)
-      .eq('from_sentence', fromSentence)
-      .single();
+    const record: Omit<CompletedSentenceRecord, 'id' | 'created_at'> = {
+      user_id: userId,
+      from_language: fromLanguage,
+      to_language: toLanguage,
+      from_sentence: fromSentence,
+      to_sentence: toSentence,
+      theme,
+      completion_time_ms: completionTimeMs
+    };
 
-    if (fetchError) {
-      return { success: false, error: `Error fetching translation: ${fetchError.message}` };
+    const { error } = await supabase
+      .from('completed_sentences')
+      .insert(record);
+
+    if (error) {
+      return { success: false, error: `Error saving completed sentence: ${error.message}` };
     }
 
-    if (!current) {
-      return { success: false, error: 'Translation not found' };
-    }
-
-    // Update with the incremented count
-    const { error: updateError } = await supabase
-      .from('translations')
-      .update({ 
-        number_of_times_correct: (current.number_of_times_correct || 0) + 1
-      })
-      .eq('user_id', userId)
-      .eq('from_language', fromLanguage)
-      .eq('to_language', toLanguage)
-      .eq('from_sentence', fromSentence);
-
-    if (updateError) {
-      return { success: false, error: `Error updating translation: ${updateError.message}` };
-    }
-
+    console.log(`✅ [DB] Saved completed sentence: "${fromSentence}" -> "${toSentence}"`);
     return { success: true };
   } catch (error) {
     return { 
       success: false, 
       error: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    };
+  }
+}
+
+/**
+ * Get completed sentences count for statistics
+ */
+export async function getCompletedSentencesCount(
+  userId: string,
+  fromLanguage?: string,
+  toLanguage?: string
+): Promise<{ count: number; error?: string }> {
+  try {
+    let query = supabase
+      .from('completed_sentences')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (fromLanguage) {
+      query = query.eq('from_language', fromLanguage);
+    }
+    if (toLanguage) {
+      query = query.eq('to_language', toLanguage);
+    }
+
+    const { count, error } = await query;
+
+    if (error) {
+      return { count: 0, error: `Error fetching completed sentences count: ${error.message}` };
+    }
+
+    return { count: count || 0 };
+  } catch (error) {
+    return { 
+      count: 0, 
+      error: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    };
+  }
+}
+
+/**
+ * Generate a new theme-based queue with 60 exercises (20 unique × 3 repetitions)
+ */
+export async function generateNewThemeQueue(
+  userId: string,
+  fromLanguage: string,
+  toLanguage: string,
+  sentenceLength: number,
+  theme: string,
+  onAIStatusChange?: (isCallingAI: boolean) => void
+): Promise<{ translations: Translation[]; error?: string }> {
+  console.log(`🎨 [Queue] Generating new theme queue for: "${theme}"`);
+  
+  try {
+    onAIStatusChange?.(true);
+    
+    const exercises = await generateThemeQueue(
+      fromLanguage,
+      toLanguage,
+      sentenceLength,
+      theme
+    );
+    
+    onAIStatusChange?.(false);
+
+    if (exercises.length === 0) {
+      return { 
+        translations: [], 
+        error: `Failed to generate exercises for theme: ${theme}` 
+      };
+    }
+
+    // Convert exercises to translation format
+    const translations: Translation[] = exercises.map(exercise => ({
+      from_sentence: exercise.from,
+      to_sentence: exercise.to
+    }));
+
+    console.log(`✅ [Queue] Generated ${translations.length} translations for theme: "${theme}"`);
+    return { translations };
+
+  } catch (error) {
+    onAIStatusChange?.(false);
+    return { 
+      translations: [], 
+      error: `Error generating theme queue: ${error instanceof Error ? error.message : 'Unknown error'}` 
     };
   }
 }
