@@ -498,20 +498,22 @@ function App() {
             <p className="text-sm text-slate-600">
               Sentences completed: {statistics.sentencesCompleted}
             </p>
-            {showDebugInfo && (
+            {currentTheme && (
+              <p className="text-sm text-blue-600 font-medium">
+                Theme: "{currentTheme}"
+              </p>
+            )}
+
               <div className="text-xs text-slate-500 mt-1 space-y-1">
-                <p>Queue: {currentTranslationIndex + 1}/{translationsQueue.length}</p>
-                {currentTheme && (
-                  <p>Current theme: "{currentTheme}"</p>
-                )}
-                {isCallingAI && (
+                <p>Exercises: {currentTranslationIndex + 1}/{translationsQueue.length}</p>
+                {/* {isCallingAI && (
                   <p className="text-blue-600 font-medium">🤖 AI generating exercises...</p>
                 )}
                 {isLoadingFromDB && !isCallingAI && (
                   <p className="text-green-600 font-medium">💾 Loading from database...</p>
-                )}
+                )} */}
               </div>
-            )}
+          
           </div>
           <div className="flex items-center gap-4">
             {/* Profile Picture with Dropdown */}
