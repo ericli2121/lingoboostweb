@@ -358,7 +358,8 @@ async function generateTranslationsInBackground(
   fromLanguage: string,
   toLanguage: string,
   sentenceLength: number,
-  theme?: string
+  theme?: string,
+  onAIStatusChange?: (isCallingAI: boolean) => void
 ): Promise<void> {
   const generationKey = `${userId}-${fromLanguage}-${toLanguage}-${sentenceLength}-${theme || ''}`;
   
@@ -374,6 +375,7 @@ async function generateTranslationsInBackground(
       console.log(`🔄 [Background] Generating for: ${fromLanguage} -> ${toLanguage}, length=${sentenceLength}, theme="${theme}"`);
       
       // Generate new exercises via API (generate more to build up stock)
+      onAIStatusChange?.(true);
       const newExercises = await generateExercisesSimple(
         fromLanguage,
         toLanguage,
@@ -381,6 +383,7 @@ async function generateTranslationsInBackground(
         theme,
         20 // Generate 20 more in background
       );
+      onAIStatusChange?.(false);
 
       if (!newExercises || newExercises.length === 0) {
         console.warn('⚠️ [Background] Failed to generate new exercises from API');
@@ -441,7 +444,8 @@ export async function getTranslationsForPracticeWithFallback(
   count: number,
   sentenceLength: number,
   theme?: string,
-  numberOfTimesCorrect: number = 5
+  numberOfTimesCorrect: number = 5,
+  onAIStatusChange?: (isCallingAI: boolean) => void
 ): Promise<{ translations: Translation[]; error?: string; generatedNew?: boolean }> {
   console.log(`🔍 [Translations] Starting getTranslationsForPracticeWithFallback`);
   console.log(`🔍 [Translations] Parameters: userId=${userId.substring(0,8)}..., from=${fromLanguage}, to=${toLanguage}, count=${count}, length=${sentenceLength}, theme="${theme}", correctThreshold=${numberOfTimesCorrect}`);
@@ -463,20 +467,21 @@ export async function getTranslationsForPracticeWithFallback(
       console.log(`✅ [Translations] Found ${existingResult.translations.length} existing translations`);
       
       // Check if we have fewer translations than requested - trigger background generation
-      if (existingResult.translations.length < count * 2) {
-        console.log(`📈 [Translations] Have ${existingResult.translations.length} translations but need ${count}, starting background generation...`);
+      if (existingResult.translations.length < count * 3) { // Increased threshold for testing
+        console.log(`📈 [Translations] Have ${existingResult.translations.length} translations but need ${count * 3}, starting background generation...`);
         // Start background generation asynchronously (don't await)
         generateTranslationsInBackground(
           userId,
           fromLanguage,
           toLanguage,
           sentenceLength,
-          theme
+          theme,
+          onAIStatusChange
         ).catch(error => {
           console.error('❌ [Translations] Background generation failed:', error);
         });
       } else {
-        console.log(`✅ [Translations] Have enough translations (${existingResult.translations.length}/${count}), no background generation needed`);
+        console.log(`✅ [Translations] Have enough translations (${existingResult.translations.length}/${count * 3}), no background generation needed`);
       }
       
       return { 
@@ -489,6 +494,7 @@ export async function getTranslationsForPracticeWithFallback(
 
     // Generate new exercises via API
     console.log(`🌐 [Translations] Calling API to generate ${count} new exercises...`);
+    onAIStatusChange?.(true);
     const newExercises = await generateExercisesSimple(
       fromLanguage,
       toLanguage,
@@ -496,6 +502,7 @@ export async function getTranslationsForPracticeWithFallback(
       theme,
       count
     );
+    onAIStatusChange?.(false);
 
     if (!newExercises || newExercises.length === 0) {
       console.error('❌ [Translations] API returned no exercises');

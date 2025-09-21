@@ -66,6 +66,11 @@ function App() {
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<'correct' | 'incorrect' | null>(null);
   
+  // Debug state
+  const [showDebugInfo, setShowDebugInfo] = useState(true);
+  const [isCallingAI, setIsCallingAI] = useState(false);
+  const [isLoadingFromDB, setIsLoadingFromDB] = useState(false);
+  
   // Local form state for settings modal (not applied until OK button clicked)
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
   const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
@@ -113,6 +118,7 @@ function App() {
     console.log(`🔄 [App] Parameters: from=${getLanguageName(fromLanguage)}, to=${getLanguageName(toLanguage)}, count=${NUMBER_OF_TRANSLATIONS_TO_LOAD}, length=${sentenceLength}, theme="${theme}"`);
     
     setIsLoadingTranslations(true);
+    setIsLoadingFromDB(true);
     try {
       const result = await getTranslationsForPracticeWithFallback(
         user.id,
@@ -121,7 +127,8 @@ function App() {
         NUMBER_OF_TRANSLATIONS_TO_LOAD,
         sentenceLength,
         theme,
-        NUMBER_OF_TIMES_CORRECT_NEEDED
+        NUMBER_OF_TIMES_CORRECT_NEEDED,
+        setIsCallingAI
       );
 
       if (result.error) {
@@ -155,6 +162,7 @@ function App() {
       }
     } finally {
       setIsLoadingTranslations(false);
+      setIsLoadingFromDB(false);
       console.log('✅ [App] loadTranslations completed');
     }
   }, [user, fromLanguage, toLanguage, sentenceLength, theme, getLanguageName]);
@@ -423,7 +431,7 @@ function App() {
     setShowSettings(false);
   }, [localFromLanguage, localToLanguage, localSentenceLength, localTheme]);
 
-  if (!gameState || isLoadingTranslations) {
+  if (!gameState || (isLoadingTranslations && translationsQueue.length === 0)) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
@@ -576,6 +584,17 @@ function App() {
             <p className="text-sm text-slate-600">
               Sentences completed: {statistics.sentencesCompleted}
             </p>
+            {showDebugInfo && (
+              <div className="text-xs text-slate-500 mt-1 space-y-1">
+                <p>Queue length: {translationsQueue.length}</p>
+                {isCallingAI && (
+                  <p className="text-blue-600 font-medium">🤖 AI generating exercises...</p>
+                )}
+                {isLoadingFromDB && !isCallingAI && (
+                  <p className="text-green-600 font-medium">💾 Loading from database...</p>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4">
             {/* Profile Picture with Dropdown */}
