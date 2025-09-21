@@ -136,6 +136,7 @@ function App() {
         setShowThemeSelection(true);
       } else {
         console.log(`✅ [App] Generated queue with ${result.translations.length} translations for theme: "${selectedTheme}"`);
+        // Batch state updates to avoid double refresh
         setTranslationsQueue(result.translations);
         setCurrentTranslationIndex(0);
         setShowThemeSelection(false);
@@ -191,23 +192,27 @@ function App() {
     }
   }, [fromLanguage, toLanguage, sentenceLength]);
 
-  // Show theme selection when queue is empty
+  // Show theme selection when queue is empty or index is out of bounds
   useEffect(() => {
-    if (user && translationsQueue.length === 0 && !isLoadingTranslations && hasInitiallyLoaded.current) {
-      console.log('� [App] Queue is empty - showing theme selection');
-      setShowThemeSelection(true);
+    if (user && hasInitiallyLoaded.current && !isLoadingTranslations) {
+      if (translationsQueue.length === 0 || currentTranslationIndex >= translationsQueue.length) {
+        console.log(`📋 [App] Showing theme selection - Queue length: ${translationsQueue.length}, Index: ${currentTranslationIndex}`);
+        setShowThemeSelection(true);
+        setGameState(null);
+      }
     }
-  }, [translationsQueue.length, user, isLoadingTranslations]);
+  }, [translationsQueue.length, currentTranslationIndex, user, isLoadingTranslations]);
 
-  // Initialize game when translations are loaded
+  // Initialize game when we have valid translations and index
   useEffect(() => {
-    if (translationsQueue.length > 0) {
-      console.log(`🎮 [App] Translations loaded, initializing game with ${translationsQueue.length} translations`);
+    if (translationsQueue.length > 0 && 
+        currentTranslationIndex >= 0 && 
+        currentTranslationIndex < translationsQueue.length && 
+        !isLoadingTranslations) {
+      console.log(`🎮 [App] Initializing game for translation ${currentTranslationIndex + 1}/${translationsQueue.length}`);
       initializeGame();
-    } else {
-      console.log('⏳ [App] Waiting for translations to load...');
     }
-  }, [translationsQueue, currentTranslationIndex, initializeGame]);
+  }, [translationsQueue.length, currentTranslationIndex, isLoadingTranslations]);
 
   // Remove the old test function
   // useEffect(() => {
@@ -306,14 +311,21 @@ function App() {
             );
           }
           
-          // Remove completed translation from queue and stay at index 0
-          console.log(`🗑️ [App] Removing completed translation from queue. Queue length before: ${translationsQueue.length}`);
-          const newQueue = translationsQueue.slice(1); // Remove first element (current translation)
-          setTranslationsQueue(newQueue);
-          console.log(`📚 [App] Queue length after removal: ${newQueue.length}`);
+          // Move to next translation by incrementing index (don't remove from queue)
+          console.log(`➡️ [App] Moving to next translation. Current index: ${currentTranslationIndex}, Queue length: ${translationsQueue.length}`);
+          const nextIndex = currentTranslationIndex + 1;
           
-          // Keep currentTranslationIndex at 0 since we removed the completed item
-          setCurrentTranslationIndex(0);
+          if (nextIndex >= translationsQueue.length) {
+            // Reached end of queue - show theme selection for new exercises
+            console.log(`✅ [App] Reached end of queue (${translationsQueue.length} translations completed)`);
+            setShowThemeSelection(true);
+            setGameState(null); // Clear current game state
+          } else {
+            // Move to next translation
+            console.log(`📚 [App] Moving to translation ${nextIndex + 1} of ${translationsQueue.length}`);
+            setCurrentTranslationIndex(nextIndex);
+          }
+          
           setIsReadingSentence(false);
         });
       } else if (newScrambled.length === 0 && newConstructed.length > 0) {
@@ -328,21 +340,21 @@ function App() {
 
   const handleNextSentence = useCallback(async () => {
     console.log(`➡️ [App] Manual next sentence requested`);
-    console.log(`📚 [App] Queue status: ${translationsQueue.length} translations remaining`);
-    console.log(`📚 [App] Queue contents:`, translationsQueue.map((t, i) => `${i}: "${t.from_sentence}" -> "${t.to_sentence}"`));
+    console.log(`📚 [App] Current index: ${currentTranslationIndex}, Queue length: ${translationsQueue.length}`);
     
-    if (translationsQueue.length > 1) {
-      // Remove current translation and move to next
-      console.log(`🗑️ [App] Manually removing current translation from queue`);
-      const newQueue = translationsQueue.slice(1);
-      setTranslationsQueue(newQueue);
-      console.log(`✅ [App] Queue length after manual removal: ${newQueue.length}`);
-      // Index stays at 0 since we removed the first item
-      setCurrentTranslationIndex(0);
+    const nextIndex = currentTranslationIndex + 1;
+    
+    if (nextIndex >= translationsQueue.length) {
+      // Reached end of queue - show theme selection for new exercises
+      console.log(`⚠️ [App] Reached end of queue manually`);
+      setShowThemeSelection(true);
+      setGameState(null);
     } else {
-      console.log(`⚠️ [App] No more translations available in queue`);
+      // Move to next translation
+      console.log(`📚 [App] Manually moving to translation ${nextIndex + 1} of ${translationsQueue.length}`);
+      setCurrentTranslationIndex(nextIndex);
     }
-  }, [translationsQueue]);
+  }, [currentTranslationIndex, translationsQueue]);
 
   const handleReplay = useCallback(() => {
     initializeGame();
@@ -370,9 +382,14 @@ function App() {
   }, [gameState, fromLanguage, toLanguage, getLanguageName]);
 
   const handleBack = useCallback(() => {
-    const prevIndex = currentTranslationIndex > 0 ? currentTranslationIndex - 1 : 0;
-    setCurrentTranslationIndex(prevIndex);
-  }, [currentTranslationIndex]);
+    if (currentTranslationIndex > 0) {
+      const prevIndex = currentTranslationIndex - 1;
+      console.log(`⬅️ [App] Going back to translation ${prevIndex + 1} of ${translationsQueue.length}`);
+      setCurrentTranslationIndex(prevIndex);
+    } else {
+      console.log(`⬅️ [App] Already at first translation, cannot go back`);
+    }
+  }, [currentTranslationIndex, translationsQueue.length]);
 
   const handleRevealAnswer = useCallback(() => {
     if (gameState) {
@@ -582,7 +599,7 @@ function App() {
             </p>
             {showDebugInfo && (
               <div className="text-xs text-slate-500 mt-1 space-y-1">
-                <p>Queue length: {translationsQueue.length}</p>
+                <p>Queue: {currentTranslationIndex + 1}/{translationsQueue.length}</p>
                 {currentTheme && (
                   <p>Current theme: "{currentTheme}"</p>
                 )}
