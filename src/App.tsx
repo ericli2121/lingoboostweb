@@ -58,7 +58,6 @@ function App() {
   const [fromLanguage, setFromLanguage] = useState('en');
   const [toLanguage, setToLanguage] = useState('vi');
   const [sentenceLength, setSentenceLength] = useState(3);
-  const [showSettings, setShowSettings] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isReadingSentence, setIsReadingSentence] = useState(false);
   const [theme, setTheme] = useState('');
@@ -75,12 +74,6 @@ function App() {
   // Theme selection modal state
   const [showThemeSelection, setShowThemeSelection] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('');
-  
-  // Local form state for settings modal (not applied until OK button clicked)
-  const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
-  const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
-  const [localSentenceLength, setLocalSentenceLength] = useState(sentenceLength);
-  const [localTheme, setLocalTheme] = useState(theme);
   
   const COMMON_LANGUAGES = [
     { code: 'en', name: 'English' },
@@ -111,10 +104,15 @@ function App() {
   const hasInitiallyLoaded = useRef(false);
 
   // Generate new theme-based queue
-  const generateQueueForTheme = useCallback(async (selectedTheme: string) => {
+  const generateQueueForTheme = useCallback(async (selectedTheme: string, overrideFromLanguage?: string, overrideToLanguage?: string, overrideSentenceLength?: number) => {
     if (!user) return;
     
-    console.log(`🎨 [App] Generating queue for theme: "${selectedTheme}"`);
+    // Use override values if provided, otherwise use current state
+    const useFromLanguage = overrideFromLanguage || fromLanguage;
+    const useToLanguage = overrideToLanguage || toLanguage;
+    const useSentenceLength = overrideSentenceLength || sentenceLength;
+    
+    console.log(`🎨 [App] Generating queue for theme: "${selectedTheme}" with languages: ${useFromLanguage} -> ${useToLanguage} (${useSentenceLength} words)`);
     
     setIsLoadingTranslations(true);
     setCurrentTheme(selectedTheme);
@@ -122,9 +120,9 @@ function App() {
     try {
       const result = await generateNewThemeQueue(
         user.id,
-        getLanguageName(fromLanguage),
-        getLanguageName(toLanguage),
-        sentenceLength,
+        getLanguageName(useFromLanguage),
+        getLanguageName(useToLanguage),
+        useSentenceLength,
         selectedTheme,
         setIsCallingAI
       );
@@ -416,45 +414,20 @@ function App() {
   }, []);
 
   const handleOpenSettings = useCallback(() => {
-    // Sync local form state with current settings when opening modal
-    setLocalFromLanguage(fromLanguage);
-    setLocalToLanguage(toLanguage);
-    setLocalSentenceLength(sentenceLength);
-    setLocalTheme(theme);
-    setShowSettings(true);
-  }, [fromLanguage, toLanguage, sentenceLength, theme]);
+    // Open the theme selection modal which now includes settings
+    setShowThemeSelection(true);
+  }, []);
 
-  const handleApplySettings = useCallback(() => {
-    // Apply all settings changes at once
-    setFromLanguage(localFromLanguage);
-    setToLanguage(localToLanguage);
-    setSentenceLength(localSentenceLength);
-    setTheme(localTheme);
-    setShowSettings(false);
+  const handleThemeSelected = useCallback((theme: string, newFromLanguage: string, newToLanguage: string, newSentenceLength: number) => {
+    console.log(`🎨 [App] Theme and settings selected:`, { theme, newFromLanguage, newToLanguage, newSentenceLength });
     
-    // If a theme was specified in settings, generate exercises directly
-    if (localTheme.trim()) {
-      console.log('⚙️ [Settings] Applied new settings, generating exercises for theme:', localTheme);
-      // Clear existing queue first to trigger loading screen
-      setTranslationsQueue([]);
-      setCurrentTranslationIndex(0);
-      setGameState(null);
-      // Generate new queue which will show loading screen
-      generateQueueForTheme(localTheme);
-    } else {
-      // If no theme specified, clear queue and show theme selection
-      setTranslationsQueue([]);
-      setCurrentTranslationIndex(0);
-      setCurrentTheme('');
-      setGameState(null);
-      setShowThemeSelection(true);
-      console.log('⚙️ [Settings] Applied new settings, no theme specified - showing theme selection');
-    }
-  }, [localFromLanguage, localToLanguage, localSentenceLength, localTheme, generateQueueForTheme]);
-
-  const handleThemeSelected = useCallback((theme: string) => {
-    console.log(`🎨 [App] Theme selected: "${theme}"`);
-    generateQueueForTheme(theme);
+    // Apply settings first
+    setFromLanguage(newFromLanguage);
+    setToLanguage(newToLanguage);
+    setSentenceLength(newSentenceLength);
+    
+    // Then generate queue with the new settings (pass them directly to avoid state timing issues)
+    generateQueueForTheme(theme, newFromLanguage, newToLanguage, newSentenceLength);
   }, [generateQueueForTheme]);
 
   const handleThemeSelectionClose = useCallback(() => {
@@ -515,97 +488,6 @@ function App() {
 
   return (
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
-      {/* Settings Modal */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs">
-            <h2 className="text-lg font-semibold mb-4 text-slate-800">Settings</h2>
-            <div className="mb-4">
-              <label className="block text-slate-600 mb-1 font-medium">From Language</label>
-              <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                value={localFromLanguage}
-                onChange={e => setLocalFromLanguage(e.target.value)}
-              >
-                {COMMON_LANGUAGES.map(lang => (
-                  <option key={lang.code} value={lang.code}>{lang.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-6">
-              <label className="block text-slate-600 mb-1 font-medium">To Language</label>
-              <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                value={localToLanguage}
-                onChange={e => setLocalToLanguage(e.target.value)}
-              >
-                {COMMON_LANGUAGES.map(lang => (
-                  <option key={lang.code} value={lang.code}>{lang.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-6">
-              <label className="block text-slate-600 mb-1 font-medium">Length of Sentence</label>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLocalSentenceLength(Math.max(3, localSentenceLength - 1))}
-                  disabled={localSentenceLength <= 3}
-                  className="w-8 h-8 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                  </svg>
-                </button>
-                <div className="flex-1 text-center">
-                  <span className="text-lg font-medium text-slate-700 bg-slate-50 px-4 py-2 rounded border border-slate-200">
-                    {localSentenceLength} words
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setLocalSentenceLength(Math.min(15, localSentenceLength + 1))}
-                  disabled={localSentenceLength >= 15}
-                  className="w-8 h-8 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex justify-between text-xs text-slate-500 mt-1">
-                <span>Min: 3</span>
-                <span>Max: 15</span>
-              </div>
-            </div>
-            <div className="mb-6">
-              <label className="block text-slate-600 mb-1 font-medium">Theme</label>
-              <input
-                type="text"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                value={localTheme}
-                onChange={e => setLocalTheme(e.target.value)}
-                placeholder="Enter theme (e.g., animals, food, travel)"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                className="flex-1 py-2 px-4 rounded-lg border border-slate-300 text-slate-600 font-semibold hover:bg-slate-50"
-                onClick={() => setShowSettings(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="flex-1 py-2 px-4 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600"
-                onClick={handleApplySettings}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
       {/* Header with settings */}
       <header className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -779,6 +661,9 @@ function App() {
         onClose={handleThemeSelectionClose}
         onSelectTheme={handleThemeSelected}
         toLanguage={getLanguageName(toLanguage)}
+        fromLanguage={getLanguageName(fromLanguage)}
+        sentenceLength={sentenceLength}
+        availableLanguages={COMMON_LANGUAGES}
       />
     </div>
   );

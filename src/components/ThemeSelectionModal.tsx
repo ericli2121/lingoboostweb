@@ -5,31 +5,49 @@ import { generateThemes } from '../utils/api';
 interface ThemeSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectTheme: (theme: string) => void;
+  onSelectTheme: (theme: string, fromLanguage: string, toLanguage: string, sentenceLength: number) => void;
   toLanguage: string;
+  fromLanguage: string;
+  sentenceLength: number;
+  availableLanguages: Array<{ code: string; name: string }>;
 }
 
 export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   isOpen,
   onClose,
   onSelectTheme,
-  toLanguage
+  toLanguage,
+  fromLanguage,
+  sentenceLength,
+  availableLanguages
 }) => {
   const [customTheme, setCustomTheme] = useState('');
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(false);
+  
+  // Local state for settings
+  const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
+  const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
+  const [localSentenceLength, setLocalSentenceLength] = useState(sentenceLength);
 
-  // Load suggested themes when modal opens
+  // Update local state when props change
+  useEffect(() => {
+    setLocalFromLanguage(fromLanguage);
+    setLocalToLanguage(toLanguage);
+    setLocalSentenceLength(sentenceLength);
+  }, [fromLanguage, toLanguage, sentenceLength]);
+
+  // Load suggested themes when modal opens or language changes
   useEffect(() => {
     if (isOpen) {
       loadSuggestedThemes();
     }
-  }, [isOpen]);
+  }, [isOpen, localToLanguage]);
 
   const loadSuggestedThemes = async () => {
     setIsLoadingThemes(true);
     try {
-      const themes = await generateThemes(toLanguage, 5);
+      const themes = await generateThemes(localToLanguage, 5);
       setSuggestedThemes(themes);
     } catch (error) {
       console.error('Error loading suggested themes:', error);
@@ -41,13 +59,13 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 
   const handleSelectCustomTheme = () => {
     if (customTheme.trim()) {
-      onSelectTheme(customTheme.trim());
+      onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength);
       setCustomTheme('');
     }
   };
 
   const handleSelectSuggestedTheme = (theme: string) => {
-    onSelectTheme(theme);
+    onSelectTheme(theme, localFromLanguage, localToLanguage, localSentenceLength);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -63,12 +81,76 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="p-4">
           <h2 className="text-lg font-bold text-slate-800 mb-2 text-center">
-            Choose Your Next Theme
+            Practice Settings & Theme
           </h2>
           
           <p className="text-xs text-slate-600 mb-4 text-center">
-            Select a theme for your next set of practice sentences
+            Configure your practice session and choose a theme
           </p>
+
+          {/* Language Settings */}
+          <div className="mb-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 text-sm font-medium mb-1">
+                  From Language
+                </label>
+                <select
+                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={localFromLanguage}
+                  onChange={(e) => setLocalFromLanguage(e.target.value)}
+                >
+                  {availableLanguages.map(lang => (
+                    <option key={lang.code} value={lang.code}>{lang.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-700 text-sm font-medium mb-1">
+                  To Language
+                </label>
+                <select
+                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={localToLanguage}
+                  onChange={(e) => setLocalToLanguage(e.target.value)}
+                >
+                  {availableLanguages.map(lang => (
+                    <option key={lang.code} value={lang.code}>{lang.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Sentence Length */}
+          <div className="mb-4">
+            <label className="block text-slate-700 text-sm font-medium mb-1">
+              Sentence Length
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLocalSentenceLength(Math.max(3, localSentenceLength - 1))}
+                disabled={localSentenceLength <= 3}
+                className="w-6 h-6 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                −
+              </button>
+              <div className="flex-1 text-center">
+                <span className="text-sm font-medium text-slate-700 bg-slate-50 px-3 py-1 rounded border border-slate-200">
+                  {localSentenceLength} words
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLocalSentenceLength(Math.min(15, localSentenceLength + 1))}
+                disabled={localSentenceLength >= 15}
+                className="w-6 h-6 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                +
+              </button>
+            </div>
+          </div>
 
           {/* Custom Theme Input */}
           <div className="mb-4">
