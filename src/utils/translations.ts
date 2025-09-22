@@ -14,8 +14,7 @@ export interface CompletedSentenceRecord {
   to_language: string;
   from_sentence: string;
   to_sentence: string;
-  theme?: string;
-  completion_time_ms?: number;
+  number_of_times_correct?: number;
 }
 
 /**
@@ -26,9 +25,7 @@ export async function saveCompletedSentence(
   fromLanguage: string,
   toLanguage: string,
   fromSentence: string,
-  toSentence: string,
-  theme?: string,
-  completionTimeMs?: number
+  toSentence: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const record: Omit<CompletedSentenceRecord, 'id' | 'created_at'> = {
@@ -37,12 +34,11 @@ export async function saveCompletedSentence(
       to_language: toLanguage,
       from_sentence: fromSentence,
       to_sentence: toSentence,
-      theme,
-      completion_time_ms: completionTimeMs
+      number_of_times_correct: 1
     };
 
     const { error } = await supabase
-      .from('completed_sentences')
+      .from('translations')
       .insert(record);
 
     if (error) {
@@ -69,7 +65,7 @@ export async function getCompletedSentencesCount(
 ): Promise<{ count: number; error?: string }> {
   try {
     let query = supabase
-      .from('completed_sentences')
+      .from('translations')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId);
 
@@ -142,5 +138,39 @@ export async function generateNewThemeQueue(
       translations: [], 
       error: `Error generating theme queue: ${error instanceof Error ? error.message : 'Unknown error'}` 
     };
+  }
+}
+
+/**
+ * Fetch user's completed sentences history for a specific language pair
+ */
+export async function fetchUserHistory(
+  userId: string,
+  fromLanguage: string,
+  toLanguage: string,
+  limit: number = 100
+): Promise<CompletedSentenceRecord[]> {
+  try {
+    console.log(`📚 [History] Fetching history for user ${userId}: ${fromLanguage} -> ${toLanguage}`);
+    
+    const { data, error } = await supabase
+      .from('translations')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('from_language', fromLanguage)
+      .eq('to_language', toLanguage)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('❌ [History] Error fetching history:', error);
+      throw error;
+    }
+
+    console.log(`✅ [History] Fetched ${data?.length || 0} history entries`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ [History] Error in fetchUserHistory:', error);
+    throw error;
   }
 }

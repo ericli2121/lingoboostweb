@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { generateThemes } from '../utils/api';
+import { speechService } from '../utils/speech';
 
 interface ThemeSelectionModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [customTheme, setCustomTheme] = useState('');
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(false);
+  const [hasToLanguageAudio, setHasToLanguageAudio] = useState(true);
   
   // Local state for settings
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
@@ -41,8 +43,69 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       loadSuggestedThemes();
+      // Also recheck audio when modal opens in case voices weren't loaded before
+      checkAudioAvailability();
     }
   }, [isOpen, localToLanguage]);
+
+  // Check if audio is available for the "To Language"
+  useEffect(() => {
+    checkAudioAvailability();
+    
+    // Listen for voices to load in case they're not available immediately
+    const handleVoicesChanged = () => {
+      checkAudioAvailability();
+    };
+    
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+      
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+      };
+    }
+  }, [localToLanguage]);
+
+  const checkAudioAvailability = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      // Get voices from speech service or directly from browser
+      let voices = speechService.getAvailableVoices();
+      
+      // If no voices from service, try direct browser access
+      if (voices.length === 0) {
+        voices = window.speechSynthesis.getVoices();
+      }
+      
+      // Map language codes to common speech synthesis language codes
+      const languageMapping: { [key: string]: string[] } = {
+        'en': ['en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IN', 'en-IE', 'en-NZ', 'en-ZA'],
+        'es': ['es-ES', 'es-MX', 'es-AR', 'es-CO', 'es-CL', 'es-PE', 'es-VE', 'es-US'],
+        'fr': ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH'],
+        'de': ['de-DE', 'de-AT', 'de-CH'],
+        'it': ['it-IT', 'it-CH'],
+        'pt': ['pt-BR', 'pt-PT'],
+        'ru': ['ru-RU'],
+        'zh': ['zh-CN', 'zh-TW', 'zh-HK'],
+        'ja': ['ja-JP'],
+        'ko': ['ko-KR'],
+        'vi': ['vi-VN'],
+        'ar': ['ar-SA', 'ar-AE', 'ar-EG', 'ar-JO', 'ar-KW', 'ar-LB', 'ar-QA'],
+        'hi': ['hi-IN']
+      };
+
+      const targetLanguageCodes = languageMapping[localToLanguage] || [localToLanguage];
+      
+      const hasVoice = voices.some(voice => 
+        targetLanguageCodes.some(code => 
+          voice.lang.toLowerCase().startsWith(code.toLowerCase().split('-')[0])
+        )
+      );
+      
+      setHasToLanguageAudio(hasVoice);
+    } else {
+      setHasToLanguageAudio(false);
+    }
+  };
 
   const loadSuggestedThemes = async () => {
     setIsLoadingThemes(true);
@@ -141,6 +204,32 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           {!areLanguagesDifferent() && (
             <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
               ⚠️ Please select different languages for "From" and "To" fields. You cannot translate between the same language.
+            </div>
+          )}
+
+          {/* Audio Availability Warning */}
+                    {/* Audio Availability Warning */}
+          {!hasToLanguageAudio && areLanguagesDifferent() && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-amber-800">
+              <div className="flex items-start gap-2 mb-2">
+                <span className="text-lg">🔊</span>
+                <div>
+                  <p className="font-medium text-sm">Audio not available</p>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    Voice synthesis for {availableLanguages.find(lang => lang.code === localToLanguage)?.name} is not available on your device. The learning experience will work, but without pronunciation audio.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-xs text-amber-700 space-y-1">
+                <p className="font-medium">To enable audio support:</p>
+                <div className="ml-2 space-y-1">
+                  <p><strong>Windows:</strong> Go to Settings → Time & Language → Speech → Add languages, then install the speech pack for your target language.</p>
+                  <p><strong>Mac:</strong> System Preferences → Accessibility → Speech → System Voice → Customize, then download additional voices.</p>
+                  <p><strong>Android:</strong> Settings → Language & Input → Text-to-speech output → Install voice data.</p>
+                  <p><strong>iOS:</strong> Settings → Accessibility → Spoken Content → Voices, then download additional languages.</p>
+                </div>
+              </div>
             </div>
           )}
 

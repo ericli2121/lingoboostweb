@@ -1,6 +1,6 @@
 export class SpeechService {
   private synthesis: SpeechSynthesis | null = null;
-  private voices: SpeechSynthesisVoice[] = [];
+  public voices: SpeechSynthesisVoice[] = [];
 
   constructor() {
     console.log('SpeechService constructor');
@@ -23,6 +23,16 @@ export class SpeechService {
         this.voices = this.synthesis?.getVoices() || [];
       });
     }
+  }
+
+  getAvailableVoices(): SpeechSynthesisVoice[] {
+    return this.voices;
+  }
+
+  hasVoiceForLanguage(languageCode: string): boolean {
+    return this.voices.some(voice => 
+      voice.lang.toLowerCase().startsWith(languageCode.toLowerCase())
+    );
   }
 
   speak(text: string, language: string = 'vi-VN', onEnd?: () => void) {

@@ -11,6 +11,7 @@ import { StatisticsModal } from './components/StatisticsModal';
 import { GoogleAd } from './components/GoogleAd';
 import { ExplanationModal } from './components/ExplanationModal';
 import { ThemeSelectionModal } from './components/ThemeSelectionModal';
+import { HistoryModal } from './components/HistoryModal';
 import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
 import { explainSentence } from './utils/api';
@@ -98,6 +99,7 @@ function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [statistics, setStatistics] = useState<Statistics>(loadStatistics());
   const [showStats, setShowStats] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [translationsQueue, setTranslationsQueue] = useState<Translation[]>([]);
   const [currentTranslationIndex, setCurrentTranslationIndex] = useState(0);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(false);
@@ -270,8 +272,7 @@ function App() {
               getLanguageName(fromLanguage),
               getLanguageName(toLanguage),
               gameState.currentSentence.from,
-              gameState.currentSentence.to,
-              currentTheme
+              gameState.currentSentence.to
             );
           }
           
@@ -377,6 +378,11 @@ function App() {
 
   const handleStatistics = useCallback(() => {
     setShowStats(true);
+  }, []);
+
+  const handleHistory = useCallback(() => {
+    setShowHistory(true);
+    setShowProfileMenu(false);
   }, []);
 
   const handleOpenSettings = useCallback(() => {
@@ -506,6 +512,12 @@ function App() {
                     <p className="text-sm text-slate-600 truncate">{user.email}</p>
                   </div>
                   <button
+                    onClick={handleHistory}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                  >
+                    History
+                  </button>
+                  <button
                     onClick={() => {
                       signOut();
                       setShowProfileMenu(false);
@@ -615,6 +627,14 @@ function App() {
         isOpen={showStats}
         onClose={() => setShowStats(false)}
         statistics={statistics}
+      />
+
+      <HistoryModal
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        userId={user?.id || ''}
+        fromLanguage={getLanguageName(fromLanguage)}
+        toLanguage={getLanguageName(toLanguage)}
       />
 
       <ExplanationModal
