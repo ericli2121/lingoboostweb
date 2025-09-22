@@ -470,96 +470,94 @@ function App() {
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       {/* Header with settings */}
       <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-center">
-          <div className="text-center">
+        <div className="max-w-screen-2xl mx-auto px-6 py-2">
+          {/* Main row with centered title and profile/settings */}
+          <div className="flex justify-center items-center relative">
+            {/* Centered LingoBoost title */}
             <h1 className="text-xl font-bold text-slate-800">
               LingoBoost
             </h1>
-            <p className="text-sm text-slate-600">
-              Sentences completed: {sessionSentencesCompleted}
-            </p>
-            {currentTheme && (
-              <p className="text-sm text-blue-600 font-medium">
-                Theme: "{currentTheme}"
-              </p>
-            )}
-
-              <div className="text-xs text-slate-500 mt-1 space-y-1">
-                <p>Exercises: {currentTranslationIndex + 1}/{translationsQueue.length}</p>
-                {/* {isCallingAI && (
-                  <p className="text-blue-600 font-medium">🤖 AI generating exercises...</p>
-                )}
-                {isLoadingFromDB && !isCallingAI && (
-                  <p className="text-green-600 font-medium">💾 Loading from database...</p>
-                )} */}
-              </div>
-          
-          </div>
-          <div className="absolute right-4 flex items-center gap-4">
-            {/* Profile Picture with Dropdown */}
-            <div className="relative" data-profile-menu>
-              <button
-                className="flex items-center p-1 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                aria-label="Profile menu"
-              >
-                <img
-                  src={user.user_metadata?.avatar_url || user.user_metadata?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email || '')}&background=3b82f6&color=fff`}
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
-                  onError={(e) => {
-                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email || '')}&background=3b82f6&color=fff`;
-                  }}
-                />
-              </button>
-              
-              {/* Profile Dropdown Menu */}
-              {showProfileMenu && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
-                  <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="text-sm text-slate-600 truncate">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={handleHistory}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
-                  >
-                    History
-                  </button>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setShowProfileMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              )}
-            </div>
             
-            {/* Settings Button */}
-            <button
-              className="p-2 rounded-full hover:bg-slate-100 focus:outline-none"
-              aria-label="Settings"
-              onClick={handleOpenSettings}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
+            {/* Right side - Profile and settings (absolute positioned) */}
+            <div className="absolute right-0 flex items-center gap-4">
+              {/* Profile Picture with Dropdown */}
+              <div className="relative" data-profile-menu>
+                <button
+                  className="flex items-center p-1 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  aria-label="Profile menu"
+                >
+                  <img
+                    src={user.user_metadata?.avatar_url || user.user_metadata?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email || '')}&background=3b82f6&color=fff`}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email || '')}&background=3b82f6&color=fff`;
+                    }}
+                  />
+                </button>
+                
+                {/* Profile Dropdown Menu */}
+                {showProfileMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                    <div className="px-4 py-2 border-b border-slate-100">
+                      <p className="text-sm text-slate-600 truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={handleHistory}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                    >
+                      History
+                    </button>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Settings Button */}
+              <button
+                className="p-2 rounded-full hover:bg-slate-100 focus:outline-none"
+                aria-label="Settings"
+                onClick={handleOpenSettings}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          {/* Compact secondary information row */}
+          <div className="text-center">
+            {currentTheme && (
+              <div className="text-xs text-blue-600 font-medium">
+                Theme: "{currentTheme}"
+              </div>
+            )}
+            <div className="text-xs text-slate-500 space-x-4">
+              <span>Sentence #{currentTranslationIndex + 1}/{translationsQueue.length}</span>
+              <span>Total completed: {sessionSentencesCompleted}</span>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-6 overflow-y-auto">
+      <main className="flex-1 max-w-screen-2xl mx-auto px-6 py-4 overflow-y-auto">
         {gameState ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* English Reference Sentence */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
-              <p className="text-xl text-slate-700">{gameState.currentSentence.from}</p>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200 min-h-[60px] flex items-center">
+              <p className="text-lg text-slate-700">{gameState.currentSentence.from}</p>
             </div>
 
             {/* Construction Area */}
@@ -581,7 +579,7 @@ function App() {
 
             {/* Words */}
             <div className="mt-2">
-              <div className="flex flex-wrap gap-2 min-h-24 items-center">
+              <div className="flex flex-wrap gap-2 min-h-20 items-center">
                 {gameState.scrambledWords.map((word, index) => (
                   <div key={word}>
                     <WordButton
