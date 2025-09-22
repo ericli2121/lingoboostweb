@@ -11,6 +11,7 @@ interface ThemeSelectionModalProps {
   fromLanguage: string;
   sentenceLength: number;
   availableLanguages: Array<{ code: string; name: string }>;
+  currentTheme?: string;
 }
 
 export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
@@ -20,7 +21,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   toLanguage,
   fromLanguage,
   sentenceLength,
-  availableLanguages
+  availableLanguages,
+  currentTheme
 }) => {
   const [customTheme, setCustomTheme] = useState('');
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
@@ -31,6 +33,13 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
   const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
   const [localSentenceLength, setLocalSentenceLength] = useState(sentenceLength);
+
+  // Initialize customTheme with currentTheme when modal opens
+  useEffect(() => {
+    if (isOpen && currentTheme) {
+      setCustomTheme(currentTheme);
+    }
+  }, [isOpen, currentTheme]);
 
   // Update local state when props change
   useEffect(() => {
@@ -287,15 +296,20 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           {/* Custom Theme Input */}
           <div className="mb-4">
             <label className="block text-slate-700 text-sm font-medium mb-1">
-              Custom Theme
+              {currentTheme ? 'Edit Current Theme' : 'Custom Theme'}
             </label>
+            {currentTheme && (
+              <p className="text-xs text-slate-500 mb-2">
+                Current theme: "{currentTheme}"
+              </p>
+            )}
             <div className="flex gap-2">
               <input
                 type="text"
                 value={customTheme}
                 onChange={(e) => setCustomTheme(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Enter your own theme..."
+                placeholder={currentTheme ? `Edit: ${currentTheme}` : "Enter your own theme..."}
                 className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button

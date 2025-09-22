@@ -379,7 +379,7 @@ Currently, no authentication is required for these endpoints.
   "count": 20,
   "total_generated": 20
 }
-```
+`
 
 ## Error Responses
 

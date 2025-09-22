@@ -658,6 +658,7 @@ function App() {
         fromLanguage={fromLanguage}
         sentenceLength={sentenceLength}
         availableLanguages={COMMON_LANGUAGES}
+        currentTheme={currentTheme}
       />
     </div>
   );
