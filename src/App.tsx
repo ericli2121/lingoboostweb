@@ -671,6 +671,7 @@ function App() {
         sentenceLength={sentenceLength}
         availableLanguages={COMMON_LANGUAGES}
         currentTheme={currentTheme}
+        queueLength={translationsQueue.length}
       />
     </div>
   );

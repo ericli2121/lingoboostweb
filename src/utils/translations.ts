@@ -148,7 +148,7 @@ export async function fetchUserHistory(
   userId: string,
   fromLanguage: string,
   toLanguage: string,
-  limit: number = 100
+  limit: number = 200
 ): Promise<CompletedSentenceRecord[]> {
   try {
     console.log(`📚 [History] Fetching history for user ${userId}: ${fromLanguage} -> ${toLanguage}`);

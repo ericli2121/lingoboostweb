@@ -12,6 +12,7 @@ interface ThemeSelectionModalProps {
   sentenceLength: number;
   availableLanguages: Array<{ code: string; name: string }>;
   currentTheme?: string;
+  queueLength: number;
 }
 
 export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
@@ -22,7 +23,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   fromLanguage,
   sentenceLength,
   availableLanguages,
-  currentTheme
+  currentTheme,
+  queueLength
 }) => {
   const [customTheme, setCustomTheme] = useState('');
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
@@ -164,6 +166,11 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't allow closing if queue is empty - user must select a theme
+    if (queueLength === 0) {
+      return;
+    }
+    
     // Close modal if clicking on the backdrop (not on the modal content)
     if (e.target === e.currentTarget) {
       onClose();
@@ -179,12 +186,21 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-slate-800">
-              Practice Settings & Theme
+              Configurations
             </h2>
             <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+              onClick={() => {
+                if (queueLength > 0) {
+                  onClose();
+                }
+              }}
+              className={`transition-colors p-1 ${
+                queueLength === 0 
+                  ? 'text-slate-300 cursor-not-allowed' 
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
               aria-label="Close"
+              disabled={queueLength === 0}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -192,9 +208,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
             </button>
           </div>
           
-          <p className="text-xs text-slate-600 mb-4 text-center">
-            Configure your practice session and choose a theme
-          </p>
+
 
           {/* Language Settings */}
           <div className="mb-4">
@@ -295,8 +309,9 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 
           {/* Custom Theme Input */}
           <div className="mb-4">
-            <label className="block text-slate-700 text-sm font-medium mb-1">
-              {currentTheme ? 'Edit Current Theme' : 'Custom Theme'}
+            <label className="flex items-center gap-1 text-slate-700 text-sm font-medium mb-1">
+             
+              {currentTheme ? 'Edit Current Theme' : 'Custom Theme'} <span className="text-slate-400 text-xs font-normal">🤖 tell AI what you want to practice</span>
             </label>
             {currentTheme && (
               <p className="text-xs text-slate-500 mb-2">
@@ -360,20 +375,13 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center">
+          <div className="flex justify-start items-center">
             <button
               onClick={loadSuggestedThemes}
               disabled={isLoadingThemes}
               className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50"
             >
               🔄 Get New Suggestions
-            </button>
-            
-            <button
-              onClick={onClose}
-              className="px-4 py-1 text-sm text-slate-600 hover:text-slate-800"
-            >
-              Cancel
             </button>
           </div>
         </div>
