@@ -27,16 +27,26 @@ function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
+      // Reset session counter when user logs in for the first time
+      if (session?.user) {
+        setSessionSentencesCompleted(0);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      const previousUser = user;
       setUser(session?.user ?? null);
+      
+      // Reset session counter only when user logs in (was null, now has user)
+      if (!previousUser && session?.user) {
+        setSessionSentencesCompleted(0);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user]);
 
   // Sign in with Google
   const signInWithGoogle = async () => {
@@ -120,8 +130,7 @@ function App() {
     
     console.log(`🎨 [App] Generating queue for theme: "${selectedTheme}" with languages: ${useFromLanguage} -> ${useToLanguage} (${useSentenceLength} words)`);
     
-    // Reset session counter when starting a new theme
-    setSessionSentencesCompleted(0);
+    // Session counter continues across themes - only resets on logout/login
     
     setIsLoadingTranslations(true);
     setCurrentTheme(selectedTheme);
