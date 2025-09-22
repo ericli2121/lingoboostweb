@@ -197,14 +197,13 @@ function App() {
 
   // Show theme selection when queue is empty or index is out of bounds
   useEffect(() => {
-    if (user && hasInitiallyLoaded.current && !isLoadingTranslations) {
+    if (user && hasInitiallyLoaded.current && !isLoadingTranslations && !showThemeSelection) {
       if (translationsQueue.length === 0 || currentTranslationIndex >= translationsQueue.length) {
-        console.log(`📋 [App] Showing theme selection - Queue length: ${translationsQueue.length}, Index: ${currentTranslationIndex}`);
         setShowThemeSelection(true);
         setGameState(null);
       }
     }
-  }, [translationsQueue.length, currentTranslationIndex, user, isLoadingTranslations]);
+  }, [translationsQueue.length, currentTranslationIndex, user, isLoadingTranslations, showThemeSelection]);
 
   // Initialize game when we have valid translations and index
   useEffect(() => {

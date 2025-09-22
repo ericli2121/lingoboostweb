@@ -327,7 +327,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 value={customTheme}
                 onChange={(e) => setCustomTheme(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={currentTheme ? `${currentTheme}` : "Enter your own theme..."}
+                placeholder= {"Enter your own theme..."}
                 className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
