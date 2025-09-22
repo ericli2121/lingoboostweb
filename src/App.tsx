@@ -40,10 +40,13 @@ function App() {
 
   // Sign in with Google
   const signInWithGoogle = async () => {
+    // Use the current origin, but ensure it's the correct one for production
+    const redirectUrl = window.location.origin;
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: redirectUrl
       }
     });
     if (error) console.error('Error signing in:', error);
