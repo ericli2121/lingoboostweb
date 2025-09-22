@@ -333,6 +333,54 @@ Currently, no authentication is required for these endpoints.
 
 ---
 
+
+#### `POST /generate_themes`
+**Description**: Generates fun and specific themes/topics for translation exercises that focus on unique vocabulary or grammatical structures.
+
+**Request Body**:
+```json
+{
+  "count": 20,
+  "language": "Vietnamese"
+}
+```
+
+**Parameters**:
+- `count` (int, optional): Number of themes to generate (1-20, default: 50)
+- `language` (string, optional): Target language for exercises (default: "English")
+
+**Response**:
+```json
+{
+  "success": true,
+  "themes": [
+    "cute animals and their baby names",
+    "adjectives to describe personality traits",
+    "conditional sentences about imaginary situations", 
+    "phrases using 'it is too ___ to ___'",
+    "questions using the five W words (who, what, when, where, why)",
+    "present continuous tense for describing current activities",
+    "comparisons between city and countryside life",
+    "past tense stories about childhood memories",
+    "polite requests and formal language",
+    "weather expressions and seasonal activities",
+    "food textures and flavors vocabulary",
+    "emotions and feelings in different contexts",
+    "travel vocabulary for airport situations",
+    "family relationships and kinship terms",
+    "workplace communication phrases",
+    "shopping and bargaining expressions",
+    "health and medical terminology",
+    "technology and social media vocabulary",
+    "environmental and nature topics",
+    "cultural celebrations and traditions"
+  ],
+  "language": "Vietnamese",
+  "count": 20,
+  "total_generated": 20
+}
+```
+
 ## Error Responses
 
 All endpoints return error responses in the following format:

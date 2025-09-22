@@ -177,19 +177,6 @@ function App() {
     }
   }, [user]);
 
-  // Clear queue when settings change
-  useEffect(() => {
-    if (user && hasInitiallyLoaded.current) {
-      console.log('⚙️ [App] Settings changed - clearing queue');
-      console.log(`⚙️ [App] New settings: from=${fromLanguage}, to=${toLanguage}, length=${sentenceLength}`);
-      setTranslationsQueue([]);
-      setCurrentTranslationIndex(0);
-      setCurrentTheme('');
-      // Show theme selection for new settings
-      setShowThemeSelection(true);
-    }
-  }, [fromLanguage, toLanguage, sentenceLength]);
-
   // Show theme selection when queue is empty or index is out of bounds
   useEffect(() => {
     if (user && hasInitiallyLoaded.current && !isLoadingTranslations) {
@@ -211,27 +198,6 @@ function App() {
       initializeGame();
     }
   }, [translationsQueue.length, currentTranslationIndex, isLoadingTranslations]);
-
-  // Remove the old test function
-  // useEffect(() => {
-  //   const testGenerateExercises = async () => {
-  //     try {
-  //       console.log('Testing generateExercisesSimple...');
-  //       const exercises = await generateExercisesSimple(
-  //         getLanguageName(fromLanguage),
-  //         getLanguageName(toLanguage),
-  //         sentenceLength,
-  //         theme,
-  //         5 // Generate 5 exercises for testing
-  //       );
-  //       console.log('Generated exercises result:', exercises);
-  //     } catch (error) {
-  //       console.error('Error testing generateExercisesSimple:', error);
-  //     }
-  //   };
-
-  //   testGenerateExercises();
-  // }, []); // Empty dependency array so it only runs once on mount
 
   // Close profile menu when clicking outside
   useEffect(() => {
