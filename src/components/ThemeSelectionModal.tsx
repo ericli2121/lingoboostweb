@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { generateThemes } from '../utils/api';
 import { speechService } from '../utils/speech';
 
@@ -31,6 +31,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [customTheme, setCustomTheme] = useState('');
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(false);
+  const [isLoadingSelectedTheme, setIsLoadingSelectedTheme] = useState(false);
   const [hasToLanguageAudio, setHasToLanguageAudio] = useState(true);
   
   // Local state for settings
@@ -53,11 +54,13 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   }, [fromLanguage, toLanguage, sentenceLength]);
 
   // Load suggested themes when modal opens or language changes
+  const prevLanguageRef = useRef(localToLanguage);
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && (prevLanguageRef.current !== localToLanguage || suggestedThemes.length === 0)) {
       loadSuggestedThemes();
       // Also recheck audio when modal opens in case voices weren't loaded before
       checkAudioAvailability();
+      prevLanguageRef.current = localToLanguage;
     }
   }, [isOpen, localToLanguage]);
 
@@ -146,6 +149,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       return;
     }
     
+    setIsLoadingSelectedTheme(true);
     onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength);
     setCustomTheme('');
   };
@@ -156,6 +160,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       return;
     }
     
+    setIsLoadingSelectedTheme(true);
     onSelectTheme(theme, localFromLanguage, localToLanguage, localSentenceLength);
   };
 
@@ -184,7 +189,17 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto relative">
+        {/* Loading overlay when processing theme selection */}
+        {isLoadingSelectedTheme && (
+          <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10 rounded-lg">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-sm text-slate-600">Generating practice sentences...</p>
+            </div>
+          </div>
+        )}
+        
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-slate-800">
