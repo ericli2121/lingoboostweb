@@ -31,6 +31,10 @@ npm run dev
 npm run build
 ```
 
+## Deploying on Github pages
+npm run build
+npx gh-pages -d dist -f
+
 ## Technology Stack
 
 - **React 18** with TypeScript

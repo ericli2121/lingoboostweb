@@ -40,8 +40,8 @@ function App() {
 
   // Sign in with Google
   const signInWithGoogle = async () => {
-    // Use the current origin, but ensure it's the correct one for production
-    const redirectUrl = window.location.origin;
+    // Use the current origin + pathname for GitHub Pages compatibility
+    const redirectUrl = window.location.origin + window.location.pathname;
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
