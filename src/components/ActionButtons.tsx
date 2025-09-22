@@ -19,13 +19,6 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 }) => {
   return (
     <div className="flex flex-wrap gap-2 justify-center p-4">
-      <button
-        className="btn-secondary text-sm"
-        onClick={onExplain}
-        disabled={disabled}
-      >
-        💡 Explain
-      </button>
       
       <button
         className="btn-secondary text-sm"
@@ -34,7 +27,13 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       >
         ← Back
       </button>
-      
+      <button
+        className="btn-secondary text-sm"
+        onClick={onExplain}
+        disabled={disabled}
+      >
+        💡 Explain
+      </button>
       <button
         className="btn-secondary text-sm"
         onClick={onRevealAnswer}

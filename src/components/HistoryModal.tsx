@@ -51,9 +51,11 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
       <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-slate-800">
-              Translation History
-            </h2>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">
+                Translation History
+              </h2>
+            </div>
             <button
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600 transition-colors"
@@ -67,6 +69,11 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
           
           <p className="text-sm text-slate-600 mb-4">
             Your completed translations for {fromLanguage} → {toLanguage}
+            {!isLoading && !error && history.length > 0 && (
+              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                {history.length} total
+              </span>
+            )}
           </p>
 
           {isLoading ? (

@@ -154,13 +154,34 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Close modal if clicking on the backdrop (not on the modal content)
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      onClick={handleBackdropClick}
+    >
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="p-4">
-          <h2 className="text-lg font-bold text-slate-800 mb-2 text-center">
-            Practice Settings & Theme
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-bold text-slate-800">
+              Practice Settings & Theme
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
           
           <p className="text-xs text-slate-600 mb-4 text-center">
             Configure your practice session and choose a theme

@@ -470,8 +470,8 @@ function App() {
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       {/* Header with settings */}
       <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex-1 text-center">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-center">
+          <div className="text-center">
             <h1 className="text-xl font-bold text-slate-800">
               LingoBoost
             </h1>
@@ -495,7 +495,7 @@ function App() {
               </div>
           
           </div>
-          <div className="flex items-center gap-4">
+          <div className="absolute right-4 flex items-center gap-4">
             {/* Profile Picture with Dropdown */}
             <div className="relative" data-profile-menu>
               <button
