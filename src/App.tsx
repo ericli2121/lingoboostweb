@@ -98,6 +98,7 @@ function App() {
   
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [statistics, setStatistics] = useState<Statistics>(loadStatistics());
+  const [sessionSentencesCompleted, setSessionSentencesCompleted] = useState(0);
   const [showStats, setShowStats] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [translationsQueue, setTranslationsQueue] = useState<Translation[]>([]);
@@ -115,6 +116,9 @@ function App() {
     const useSentenceLength = overrideSentenceLength || sentenceLength;
     
     console.log(`🎨 [App] Generating queue for theme: "${selectedTheme}" with languages: ${useFromLanguage} -> ${useToLanguage} (${useSentenceLength} words)`);
+    
+    // Reset session counter when starting a new theme
+    setSessionSentencesCompleted(0);
     
     setIsLoadingTranslations(true);
     setCurrentTheme(selectedTheme);
@@ -252,6 +256,10 @@ function App() {
       // Check for completion
       if (isCompleted) {
         setCompletionStatus('correct');
+        
+        // Update session counter
+        setSessionSentencesCompleted(prev => prev + 1);
+        
         const newStats = {
           ...statistics,
           sentencesCompleted: statistics.sentencesCompleted + 1,
@@ -468,7 +476,7 @@ function App() {
               LingoBoost
             </h1>
             <p className="text-sm text-slate-600">
-              Sentences completed: {statistics.sentencesCompleted}
+              Sentences completed: {sessionSentencesCompleted}
             </p>
             {currentTheme && (
               <p className="text-sm text-blue-600 font-medium">
@@ -605,7 +613,7 @@ function App() {
             onExplain={handleExplain}
             onBack={handleBack}
             onRevealAnswer={handleRevealAnswer}
-            onStatistics={handleStatistics}
+            // onStatistics={handleStatistics} // Disabled for now
             showAnswer={gameState.showAnswer}
             disabled={isReadingSentence}
           />

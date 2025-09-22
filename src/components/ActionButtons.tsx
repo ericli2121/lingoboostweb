@@ -4,7 +4,7 @@ interface ActionButtonsProps {
   onExplain: () => void;
   onBack: () => void;
   onRevealAnswer: () => void;
-  onStatistics: () => void;
+  onStatistics?: () => void; // Made optional
   showAnswer: boolean;
   disabled?: boolean;
 }
@@ -43,13 +43,15 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         👁 Reveal Answer
       </button>
       
-      <button
-        className="btn-primary text-sm"
-        onClick={onStatistics}
-        disabled={disabled}
-      >
-        📊 Stats
-      </button>
+      {onStatistics && (
+        <button
+          className="btn-primary text-sm"
+          onClick={onStatistics}
+          disabled={disabled}
+        >
+          📊 Stats
+        </button>
+      )}
     </div>
   );
 };
