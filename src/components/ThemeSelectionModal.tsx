@@ -7,6 +7,7 @@ interface ThemeSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectTheme: (theme: string, fromLanguage: string, toLanguage: string, sentenceLength: number) => void;
+  onClearTheme?: () => void;
   toLanguage: string;
   fromLanguage: string;
   sentenceLength: number;
@@ -19,6 +20,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   isOpen,
   onClose,
   onSelectTheme,
+  onClearTheme,
   toLanguage,
   fromLanguage,
   sentenceLength,
@@ -215,7 +217,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 text-sm font-medium mb-1">
-                  From Language
+                  1. From Language
                 </label>
                 <select
                   className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -280,7 +282,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           {/* Sentence Length */}
           <div className="mb-4">
             <label className="block text-slate-700 text-sm font-medium mb-1">
-              Sentence Length
+              2. Sentence Length
             </label>
             <div className="flex items-center gap-2">
               <button
@@ -305,26 +307,27 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 +
               </button>
             </div>
+            <p className="text-xs text-slate-500 mt-1">
+              💡 Beginner: 3-5 words • Intermediate: 6-8 words • Advanced: 9+ words
+            </p>
           </div>
 
           {/* Custom Theme Input */}
           <div className="mb-4">
             <label className="flex items-center gap-1 text-slate-700 text-sm font-medium mb-1">
-             
-              {currentTheme ? 'Edit Current Theme' : 'Custom Theme'} <span className="text-slate-400 text-xs font-normal">🤖 tell AI what you want to practice</span>
+              3. Custom Theme
+              <span className="text-slate-400 text-xs font-normal">🤖 tell AI what you want to practice</span>
             </label>
-            {currentTheme && (
-              <p className="text-xs text-slate-500 mb-2">
-                Current theme: "{currentTheme}"
-              </p>
-            )}
+
+   
+  
             <div className="flex gap-2">
               <input
                 type="text"
                 value={customTheme}
                 onChange={(e) => setCustomTheme(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={currentTheme ? `Edit: ${currentTheme}` : "Enter your own theme..."}
+                placeholder={currentTheme ? `${currentTheme}` : "Enter your own theme..."}
                 className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
@@ -334,13 +337,21 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               >
                 Use
               </button>
+              <button
+                onClick={() => setCustomTheme('')}
+                disabled={!customTheme.trim()}
+                className="px-2 py-1 bg-slate-200 text-slate-600 text-sm rounded hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Clear input"
+              >
+                ✕
+              </button>
             </div>
           </div>
 
           {/* Suggested Themes */}
           <div className="mb-4">
             <label className="block text-slate-700 text-sm font-medium mb-2">
-              Suggested Themes
+              or, choose a suggested theme
             </label>
             
             {isLoadingThemes ? (

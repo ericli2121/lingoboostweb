@@ -32,6 +32,7 @@ npm run build
 ```
 
 ## Deploying on Github pages
+npm run deploy
 npm run build
 npx gh-pages -d dist -f
 

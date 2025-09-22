@@ -426,6 +426,13 @@ function App() {
     setShowThemeSelection(false);
   }, []);
 
+  const handleClearTheme = useCallback(() => {
+    setCurrentTheme('');
+    setTranslationsQueue([]);
+    setCurrentTranslationIndex(0);
+    setGameState(null);
+  }, []);
+
   // Only show loading screen when actively generating translations
   if (isLoadingTranslations && translationsQueue.length === 0) {
     return (
@@ -666,6 +673,7 @@ function App() {
         isOpen={showThemeSelection}
         onClose={handleThemeSelectionClose}
         onSelectTheme={handleThemeSelected}
+        onClearTheme={handleClearTheme}
         toLanguage={toLanguage}
         fromLanguage={fromLanguage}
         sentenceLength={sentenceLength}
