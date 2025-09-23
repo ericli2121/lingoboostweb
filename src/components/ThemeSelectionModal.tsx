@@ -57,16 +57,13 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   
   // Ref to track if we've already loaded themes for this modal opening
   const hasLoadedForCurrentSession = useRef(false);
+  
   // Initialize customTheme with currentTheme when modal opens
-  // useEffect(() => {
-  //   if (isOpen && currentTheme) {
-  //     setCustomTheme(currentTheme);
-  //   }
-  //   // Reset local loading state when modal reopens (in case of error)
-  //   if (isOpen) {
-  //     setIsSelectingTheme(false);
-  //   }
-  // }, [isOpen, currentTheme]);
+  useEffect(() => {
+    if (isOpen && currentTheme) {
+      setCustomTheme(currentTheme);
+    }
+  }, [isOpen, currentTheme]);
 
   // Update local state when props change
   useEffect(() => {
@@ -478,7 +475,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 value={customTheme}
                 onChange={(e) => setCustomTheme(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={currentTheme ? `${currentTheme}` : "Enter your own theme..."}
+                placeholder="Enter your own theme..."
                 className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 disabled={isLoading}
               />
