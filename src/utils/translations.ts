@@ -92,7 +92,7 @@ export async function getCompletedSentencesCount(
 }
 
 /**
- * Generate a new theme-based queue with 60 exercises (20 unique × 3 repetitions)
+ * Generate a new theme-based queue with configurable exercises and repetitions
  */
 export async function generateNewThemeQueue(
   userId: string,
@@ -100,18 +100,29 @@ export async function generateNewThemeQueue(
   toLanguage: string,
   sentenceLength: number,
   theme: string,
+  numberOfExercises: number = 20,
+  repetitions: number = 3,
   onAIStatusChange?: (isCallingAI: boolean) => void
 ): Promise<{ translations: Translation[]; error?: string }> {
-  console.log(`🎨 [Queue] Generating new theme queue for: "${theme}"`);
+  console.log(`🎨 [Queue] Generating new theme queue for: "${theme}" (${numberOfExercises} exercises × ${repetitions} repetitions)`);
   
   try {
     onAIStatusChange?.(true);
+    
+    // Fetch recent exercises to avoid duplication
+    const recentExercises = await fetchRecentExercises(userId, fromLanguage, toLanguage, 40);
+    
+    // Extract just the "to" sentences for deduplication
+    const previousToSentences = recentExercises.map(exercise => exercise.to_sentence);
     
     const exercises = await generateThemeQueue(
       fromLanguage,
       toLanguage,
       sentenceLength,
-      theme
+      theme,
+      numberOfExercises,
+      repetitions,
+      previousToSentences
     );
     
     onAIStatusChange?.(false);
@@ -129,7 +140,7 @@ export async function generateNewThemeQueue(
       to_sentence: exercise.to
     }));
 
-    console.log(`✅ [Queue] Generated ${translations.length} translations for theme: "${theme}"`);
+    console.log(`✅ [Queue] Generated ${translations.length} translations for theme: "${theme}" (avoiding ${previousToSentences.length} recent exercises)`);
     return { translations };
 
   } catch (error) {
@@ -138,6 +149,46 @@ export async function generateNewThemeQueue(
       translations: [], 
       error: `Error generating theme queue: ${error instanceof Error ? error.message : 'Unknown error'}` 
     };
+  }
+}
+
+/**
+ * Fetch user's recent completed sentences for deduplication
+ */
+export async function fetchRecentExercises(
+  userId: string,
+  fromLanguage: string,
+  toLanguage: string,
+  limit: number = 40
+): Promise<Translation[]> {
+  try {
+    console.log(`📚 [Recent] Fetching recent exercises for user ${userId}: ${fromLanguage} -> ${toLanguage}`);
+    
+    const { data, error } = await supabase
+      .from('translations')
+      .select('from_sentence, to_sentence')
+      .eq('user_id', userId)
+      .eq('from_language', fromLanguage)
+      .eq('to_language', toLanguage)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('❌ [Recent] Error fetching recent exercises:', error);
+      throw error;
+    }
+
+    const recentExercises = data?.map(item => ({
+      from_sentence: item.from_sentence,
+      to_sentence: item.to_sentence
+    })) || [];
+
+    console.log(`✅ [Recent] Fetched ${recentExercises.length} recent exercises for deduplication`);
+    return recentExercises;
+  } catch (error) {
+    console.error('❌ [Recent] Error in fetchRecentExercises:', error);
+    // Return empty array on error to avoid blocking exercise generation
+    return [];
   }
 }
 

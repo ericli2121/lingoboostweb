@@ -73,6 +73,8 @@ function App() {
   const [fromLanguage, setFromLanguage] = useState('en');
   const [toLanguage, setToLanguage] = useState('es');
   const [sentenceLength, setSentenceLength] = useState(3);
+  const [numberOfExercises, setNumberOfExercises] = useState(10);
+  const [repetitions, setRepetitions] = useState(2);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isReadingSentence, setIsReadingSentence] = useState(false);
   const [theme, setTheme] = useState('');
@@ -127,6 +129,8 @@ function App() {
         getLanguageName(useToLanguage),
         useSentenceLength,
         selectedTheme,
+        overrideNumberOfExercises || 10,
+        overrideRepetitions || 2,
         setIsCallingAI
       );
 
@@ -402,6 +406,8 @@ function App() {
     setFromLanguage(newFromLanguage);
     setToLanguage(newToLanguage);
     setSentenceLength(newSentenceLength);
+    setNumberOfExercises(newNumberOfExercises);
+    setRepetitions(newRepetitions);
     
     // Then generate queue with the new settings (pass them directly to avoid state timing issues)
     generateQueueForTheme(theme, newFromLanguage, newToLanguage, newSentenceLength, newNumberOfExercises, newRepetitions);
@@ -662,6 +668,8 @@ function App() {
         toLanguage={toLanguage}
         fromLanguage={fromLanguage}
         sentenceLength={sentenceLength}
+        numberOfExercises={numberOfExercises}
+        repetitions={repetitions}
         availableLanguages={COMMON_LANGUAGES}
         mostCommonLanguages={MOST_COMMON_LANGUAGES}
         currentTheme={currentTheme}

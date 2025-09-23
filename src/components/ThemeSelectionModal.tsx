@@ -14,6 +14,8 @@ interface ThemeSelectionModalProps {
   toLanguage: string;
   fromLanguage: string;
   sentenceLength: number;
+  numberOfExercises: number;
+  repetitions: number;
   availableLanguages: Array<{ code: string; name: string }>;
   mostCommonLanguages: Array<{ code: string; name: string }>;
   currentTheme?: string;
@@ -29,6 +31,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   toLanguage,
   fromLanguage,
   sentenceLength,
+  numberOfExercises,
+  repetitions,
   availableLanguages,
   mostCommonLanguages,
   currentTheme,
@@ -37,6 +41,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 }) => {
   const [customTheme, setCustomTheme] = useState('');
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
+  const [previousThemes, setPreviousThemes] = useState<string[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(false);
   const [hasToLanguageAudio, setHasToLanguageAudio] = useState(true);
   
@@ -47,8 +52,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
   const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
   const [localSentenceLength, setLocalSentenceLength] = useState(sentenceLength);
-  const [numberOfExercises, setNumberOfExercises] = useState(20);
-  const [repetitions, setRepetitions] = useState(1);
+  const [localNumberOfExercises, setLocalNumberOfExercises] = useState(numberOfExercises);
+  const [localRepetitions, setLocalRepetitions] = useState(repetitions);
   
   // Ref to track if we've already loaded themes for this modal opening
   const hasLoadedForCurrentSession = useRef(false);
@@ -67,7 +72,9 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   useEffect(() => {
     setLocalFromLanguage(fromLanguage);
     setLocalSentenceLength(sentenceLength);
-  }, [fromLanguage, sentenceLength]);
+    setLocalNumberOfExercises(numberOfExercises);
+    setLocalRepetitions(repetitions);
+  }, [fromLanguage, sentenceLength, numberOfExercises, repetitions]);
 
   // Update localToLanguage when toLanguage prop changes
   useEffect(() => {
@@ -78,10 +85,12 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       setLocalToLanguage(toLanguage);
       // Reset the session flag so themes will reload with new language
       hasLoadedForCurrentSession.current = false;
+      // Clear previous themes when language changes
+      setPreviousThemes([]);
     } else {
       console.log("[UseEffect] toLanguage - SKIPPED (same value)");
     }
-  }, [toLanguage, localToLanguage]);
+  }, [toLanguage]);
 
   // Load suggested themes when modal opens or language changes
   useEffect(() => {
@@ -146,7 +155,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const loadSuggestedThemes = async () => {
     setIsLoadingThemes(true);
     try {
-      const themes = await generateThemes(localToLanguage, SUGGESTED_THEMES_COUNT);
+      const themes = await generateThemes(localToLanguage, SUGGESTED_THEMES_COUNT, previousThemes);
       setSuggestedThemes(themes);
     } catch (error) {
       console.error('Error loading suggested themes:', error);
@@ -205,7 +214,11 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       return;
     }
     
-    onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength, numberOfExercises, repetitions);
+    const themeToUse = customTheme.trim();
+    // Add to previous themes to avoid duplication (keep only last 18)
+    setPreviousThemes(prev => [...prev, themeToUse].slice(-18));
+    
+    onSelectTheme(themeToUse, localFromLanguage, localToLanguage, localSentenceLength, localNumberOfExercises, localRepetitions);
     // setCustomTheme('');
   };
 
@@ -215,7 +228,10 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       return;
     }
     
-    onSelectTheme(theme, localFromLanguage, localToLanguage, localSentenceLength, numberOfExercises, repetitions);
+    // Add to previous themes to avoid duplication (keep only last 18)
+    setPreviousThemes(prev => [...prev, theme].slice(-18));
+    
+    onSelectTheme(theme, localFromLanguage, localToLanguage, localSentenceLength, localNumberOfExercises, localRepetitions);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -344,21 +360,21 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 <div className="flex items-center">
                   <button
                     type="button"
-                    onClick={() => setNumberOfExercises(Math.max(10, numberOfExercises - 1))}
-                    disabled={numberOfExercises <= 10 || isLoading}
+                    onClick={() => setLocalNumberOfExercises(Math.max(10, localNumberOfExercises - 1))}
+                    disabled={localNumberOfExercises <= 10 || isLoading}
                     className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-r-0 rounded-l"
                   >
                     −
                   </button>
                   <div className="h-7 flex items-center justify-center border-t border-b border-slate-300 bg-slate-50 px-3 min-w-[50px]">
                     <span className="text-sm font-medium text-slate-700">
-                      {numberOfExercises}
+                      {localNumberOfExercises}
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setNumberOfExercises(Math.min(30, numberOfExercises + 1))}
-                    disabled={numberOfExercises >= 30 || isLoading}
+                    onClick={() => setLocalNumberOfExercises(Math.min(30, localNumberOfExercises + 1))}
+                    disabled={localNumberOfExercises >= 30 || isLoading}
                     className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-l-0 rounded-r"
                   >
                     +
@@ -372,21 +388,21 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 <div className="flex items-center">
                   <button
                     type="button"
-                    onClick={() => setRepetitions(Math.max(1, repetitions - 1))}
-                    disabled={repetitions <= 1 || isLoading}
+                    onClick={() => setLocalRepetitions(Math.max(1, localRepetitions - 1))}
+                    disabled={localRepetitions <= 1 || isLoading}
                     className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-r-0 rounded-l"
                   >
                     −
                   </button>
                   <div className="h-7 flex items-center justify-center border-t border-b border-slate-300 bg-slate-50 px-3 min-w-[50px]">
                     <span className="text-sm font-medium text-slate-700">
-                      {repetitions}x
+                      {localRepetitions}x
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setRepetitions(Math.min(3, repetitions + 1))}
-                    disabled={repetitions >= 3 || isLoading}
+                    onClick={() => setLocalRepetitions(Math.min(3, localRepetitions + 1))}
+                    disabled={localRepetitions >= 3 || isLoading}
                     className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-l-0 rounded-r"
                   >
                     +
