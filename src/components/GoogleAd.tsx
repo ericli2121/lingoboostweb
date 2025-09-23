@@ -5,13 +5,15 @@ interface GoogleAdProps {
   dataAdFormat?: string;
   dataFullWidthResponsive?: boolean;
   style?: React.CSSProperties;
+  className?: string;
 }
 
 export const GoogleAd: React.FC<GoogleAdProps> = ({
   dataAdSlot,
   dataAdFormat = 'auto',
   dataFullWidthResponsive = true,
-  style = { display: 'block' }
+  style = { display: 'block' },
+  className = ''
 }) => {
   useEffect(() => {
     try {
@@ -41,14 +43,16 @@ export const GoogleAd: React.FC<GoogleAdProps> = ({
   }
 
   return (
-    <ins
-      className="adsbygoogle"
-      style={style}
-      data-ad-client={clientId}
-      data-ad-slot={dataAdSlot}
-      data-ad-format={dataAdFormat}
-      data-full-width-responsive={dataFullWidthResponsive}
-    />
+    <div className={className}>
+      <ins
+        className="adsbygoogle"
+        style={style}
+        data-ad-client={clientId}
+        data-ad-slot={dataAdSlot}
+        data-ad-format={dataAdFormat}
+        data-full-width-responsive={dataFullWidthResponsive}
+      />
+    </div>
   );
 };
 
