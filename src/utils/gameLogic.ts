@@ -1,4 +1,4 @@
-import { SentencePair, GameState } from '../types';
+import { SentencePair, GameState, WordItem } from '../types';
 
 function isCJKLanguage(text: string): boolean {
   // Check if text contains CJK characters (Chinese, Japanese, Korean)
@@ -96,9 +96,9 @@ function splitThaiSentence(sentence: string): string[] {
   return chunks.filter(chunk => chunk.trim() !== '');
 }
 
-export function scrambleWords(sentence: string): string[] {
+export function scrambleWords(sentence: string): WordItem[] {
   // Detect language type and handle accordingly
-  if (isCJKLanguage(sentence)) {
+  if (isCJKLanguage(sentence) || isThaiLanguage(sentence)) {
     const chunks = splitCJKSentence(sentence);
     const scrambled = [...chunks];
     
@@ -108,7 +108,8 @@ export function scrambleWords(sentence: string): string[] {
       [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
     }
     
-    return scrambled;
+    return scrambled.map((word, index) => ({ word, index }));
+
   } else if (isThaiLanguage(sentence)) {
     const chunks = splitThaiSentence(sentence);
     const scrambled = [...chunks];
@@ -119,7 +120,8 @@ export function scrambleWords(sentence: string): string[] {
       [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
     }
     
-    return scrambled;
+    return scrambled.map((word, index) => ({ word, index }));
+
   } else if (isArabicLanguage(sentence)) {
     // Arabic uses spaces but has special considerations for connected letters
     // For now, treat like space-separated languages but could be enhanced
@@ -132,7 +134,7 @@ export function scrambleWords(sentence: string): string[] {
       [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
     }
     
-    return scrambled;
+    return scrambled.map((word, index) => ({ word, index }));
   } else {
     // For space-separated languages (English, Spanish, French, German, etc.)
     const words = sentence.split(' ').filter(word => word.trim() !== '');
@@ -144,9 +146,10 @@ export function scrambleWords(sentence: string): string[] {
       [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
     }
     
-    return scrambled;
+    return scrambled.map((word, index) => ({ word, index }));
   }
 }
+
 
 export function initializeGameState(sentence: SentencePair, index: number): GameState {
   return {
@@ -171,12 +174,21 @@ export function checkCompletion(constructedWords: string[], targetSentence: stri
 }
 
 export function moveWordToConstruction(
-  word: string,
-  scrambledWords: string[],
-  constructedWords: string[]
-): { newScrambled: string[]; newConstructed: string[] } {
-  const newScrambled = scrambledWords.filter(w => w !== word);
-  const newConstructed = [...constructedWords, word];
+  word: WordItem,
+  scrambledWords: WordItem[],
+  constructedWords: WordItem[]
+): { newScrambled: WordItem[]; newConstructed: WordItem[] } {
+  const wordIndex = scrambledWords.findIndex(item => item.index === word.index);
+  let newScrambled = [...scrambledWords];
+  let wordToMove: WordItem | undefined;
+  
+  if (wordIndex !== -1) {
+    wordToMove = newScrambled.splice(wordIndex, 1)[0];
+  }
+  
+  const newConstructed = wordToMove 
+    ? [...constructedWords, wordToMove]
+    : [...constructedWords];
   
   return {
     newScrambled,
@@ -185,19 +197,27 @@ export function moveWordToConstruction(
 }
 
 export function removeWordFromConstruction(
-  word: string,
-  scrambledWords: string[],
-  constructedWords: string[]
-): { newScrambled: string[]; newConstructed: string[] } {
-  const newConstructed = constructedWords.filter(w => w !== word);
-  const newScrambled = [...scrambledWords, word];
+  word: WordItem,
+  scrambledWords: WordItem[],
+  constructedWords: WordItem[]
+): { newScrambled: WordItem[]; newConstructed: WordItem[] } {
+  const wordIndex = constructedWords.findIndex(item => item.index === word.index);
+  let newConstructed = [...constructedWords];
+  let wordToMove: WordItem | undefined;
+  
+  if (wordIndex !== -1) {
+    wordToMove = newConstructed.splice(wordIndex, 1)[0];
+  }
+  
+  const newScrambled = wordToMove 
+    ? [...scrambledWords, wordToMove]
+    : [...scrambledWords];
   
   return {
     newScrambled,
     newConstructed
   };
 }
-
 // Development helper function to test language detection and scrambling
 export function testScrambling() {
   console.log('Testing scrambling for different languages:');

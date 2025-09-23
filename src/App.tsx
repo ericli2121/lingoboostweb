@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, Statistics } from './types';
+import { GameState, Statistics, WordItem } from './types';
 import { initializeGameState, checkCompletion, moveWordToConstruction, removeWordFromConstruction } from './utils/gameLogic';
 import { speechService } from './utils/speech';
 import { loadStatistics, saveStatistics } from './utils/storage';
@@ -242,13 +242,13 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
 
-  const handleWordClick = useCallback((word: string) => {
+  const handleWordClick = useCallback((word: WordItem) => {
     if (!gameState) return;
 
     // Don't allow interaction when sentence is being read
     if (isReadingSentence) return;
 
-    const isInConstruction = gameState.constructedWords.includes(word);
+    const isInConstruction = gameState.constructedWords.map(item => item.index).includes(word.index);
     if (isInConstruction) {
       // Remove from construction area
       const { newScrambled, newConstructed } = removeWordFromConstruction(
@@ -268,9 +268,9 @@ function App() {
       const { newScrambled, newConstructed } = moveWordToConstruction(
         word,
         gameState.scrambledWords,
-        gameState.constructedWords
+        gameState.constructedWords,
       );
-      const isCompleted = checkCompletion(newConstructed, gameState.currentSentence.to);
+      const isCompleted = checkCompletion(newConstructed.map(word => word.word), gameState.currentSentence.to);
       setGameState(prev => prev ? {
         ...prev,
         scrambledWords: newScrambled,
@@ -666,7 +666,7 @@ function App() {
             <div className="mt-2">
               <div className="flex flex-wrap gap-2 min-h-20 items-center">
                 {gameState.scrambledWords.map((word, index) => (
-                  <div key={word}>
+                  <div key={`${word}-${index}`}>
                     <WordButton
                       word={word}
                       onClick={handleWordClick}

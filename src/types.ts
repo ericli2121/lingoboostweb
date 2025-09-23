@@ -3,10 +3,14 @@ export interface SentencePair {
   to: string;
 }
 
+export interface WordItem {
+  word: string;
+  index: number;
+}
 export interface GameState {
   currentSentence: SentencePair;
-  scrambledWords: string[];
-  constructedWords: string[];
+  scrambledWords: WordItem[];
+  constructedWords: WordItem[];
   isCompleted: boolean;
   showAnswer: boolean;
   currentIndex: number;

@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { WordButton } from './WordButton';
+import { WordItem } from '../types';
 
 interface ConstructionAreaProps {
-  words: string[];
-  onWordClick: (word: string) => void;
+  words: WordItem[];
+  onWordClick: (word: WordItem) => void;
   isEmpty: boolean;
   onEmptySpaceClick?: () => void;
   completionStatus?: 'correct' | 'incorrect' | null;
@@ -44,7 +45,7 @@ export const ConstructionArea: React.FC<ConstructionAreaProps> = ({
             <div key={`${word}-${index}`}>
               <WordButton
                 word={word}
-                onClick={onWordClick}
+                onClick={() => onWordClick(word)}
               />
             </div>
           ))}
