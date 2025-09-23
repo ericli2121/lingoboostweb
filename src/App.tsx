@@ -453,7 +453,7 @@ function App() {
     return (
       <div className="h-screen bg-slate-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-800 mb-6">LingoBoost</h1>
+          <h1 className="text-3xl font-bold text-slate-800 mb-6">RapidLingo</h1>
           <p className="text-slate-600 mb-8">
             Practice language by rapid sentence construction and track your progress. Sign in to get started.
           </p>
@@ -478,12 +478,12 @@ function App() {
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       {/* Header with settings */}
       <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-screen-2xl mx-auto px-6 py-2">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           {/* Main row with centered title and profile/settings */}
-          <div className="flex justify-center items-center relative">
-            {/* Centered LingoBoost title */}
+          <div className="flex justify-center items-center relative mb-3 sm:mb-4">
+            {/* Centered RapidLingo title */}
             <h1 className="text-xl font-bold text-slate-800">
-              LingoBoost
+              RapidLingo
             </h1>
             
             {/* Right side - Profile and settings (absolute positioned) */}
@@ -545,15 +545,19 @@ function App() {
           </div>
           
           {/* Compact secondary information row */}
-          <div className="text-center">
+          <div className="text-center space-y-2">
             {currentTheme && (
               <div className="text-xs text-blue-600 font-medium">
                 Theme: "{currentTheme}"
               </div>
             )}
-            <div className="text-xs text-slate-500 space-x-4">
-              <span>Sentence #{currentTranslationIndex + 1}/{translationsQueue.length}</span>
-              <span>Total completed: {sessionSentencesCompleted}</span>
+            <div className="text-xs flex flex-col sm:flex-row sm:space-x-4 space-y-1 sm:space-y-0 items-center justify-center">
+              <span className="text-slate-500">
+                Sentence #<span className="font-semibold text-blue-600">{currentTranslationIndex + 1}</span>/<span className="text-slate-600">{translationsQueue.length}</span>
+              </span>
+              <span className="text-slate-500">
+                Total completed: <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">{sessionSentencesCompleted}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -602,7 +606,7 @@ function App() {
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-slate-800 mb-4">Welcome to LingoBoost!</h2>
+              <h2 className="text-2xl font-bold text-slate-800 mb-4">Welcome to RapidLingo!</h2>
               <p className="text-slate-600 mb-6">
                 {translationsQueue.length === 0 
                   ? "Choose a theme to start practicing with 60 themed sentences."

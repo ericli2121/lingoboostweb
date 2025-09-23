@@ -1,4 +1,4 @@
-// API utility functions for LingoBoost
+// API utility functions for RapidLingo
 
 export const explainSentence = async (
   sentence: string,
