@@ -55,8 +55,9 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [localNumberOfExercises, setLocalNumberOfExercises] = useState(numberOfExercises);
   const [localRepetitions, setLocalRepetitions] = useState(repetitions);
   
-  // Ref to track if we've already loaded themes for this modal opening
-  const hasLoadedForCurrentSession = useRef(false);
+  // Ref to track if themes have been loaded for this session
+  const hasLoadedThemes = useRef(false);
+  const previousLanguage = useRef(localToLanguage);
   
   // Initialize customTheme with currentTheme when modal opens
   useEffect(() => {
@@ -68,41 +69,32 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   // Update local state when props change
   useEffect(() => {
     setLocalFromLanguage(fromLanguage);
+    if (localToLanguage !== toLanguage) {
+      console.log("[UseEffect] props changed - updating localToLanguage:", toLanguage);
+      setLocalToLanguage(toLanguage);
+    }
     setLocalSentenceLength(sentenceLength);
     setLocalNumberOfExercises(numberOfExercises);
     setLocalRepetitions(repetitions);
-  }, [fromLanguage, sentenceLength, numberOfExercises, repetitions]);
+  }, [fromLanguage, toLanguage, sentenceLength, numberOfExercises, repetitions]);
 
-  // Update localToLanguage when toLanguage prop changes
+  // Load suggested themes when modal opens or localToLanguage changes
   useEffect(() => {
-    console.log("[UseEffect] toLanguage changed:", toLanguage);
-    // Only update if the value actually changed
-    if (localToLanguage !== toLanguage) {
-      console.log("[UseEffect] toLanguage - ACTUALLY UPDATING");
-      setLocalToLanguage(toLanguage);
-      // Reset the session flag so themes will reload with new language
-      hasLoadedForCurrentSession.current = false;
-      // Clear previous themes when language changes
-      setPreviousThemes([]);
-    } else {
-      console.log("[UseEffect] toLanguage - SKIPPED (same value)");
-    }
-  }, [toLanguage]);
-
-  // Load suggested themes when modal opens or language changes
-  useEffect(() => {
-    if (isOpen && !hasLoadedForCurrentSession.current) {
-      console.log("[UseEffect] loadSuggestedThemes - EXECUTING");
-      hasLoadedForCurrentSession.current = true;
+    const languageChanged = previousLanguage.current !== localToLanguage;
+    
+    if (isOpen && (!hasLoadedThemes.current || languageChanged)) {
+      console.log("[UseEffect] Loading themes - modal open:", !hasLoadedThemes.current, "language changed:", languageChanged, "language:", localToLanguage);
+      hasLoadedThemes.current = true;
+      previousLanguage.current = localToLanguage;
       loadSuggestedThemes();
-      // Also recheck audio when modal opens in case voices weren't loaded before
       checkAudioAvailability();
-    } else if (isOpen && hasLoadedForCurrentSession.current) {
-      console.log("[UseEffect] loadSuggestedThemes - SKIPPED (already loaded)");
+      // Clear previous themes when language changes
+      if (languageChanged) {
+        setPreviousThemes([]);
+      }
     } else if (!isOpen) {
-      // Reset the flag when modal closes
-      hasLoadedForCurrentSession.current = false;
-      console.log("[UseEffect] loadSuggestedThemes - RESET FLAG (modal closed)");
+      // Reset when modal closes
+      hasLoadedThemes.current = false;
     }
   }, [isOpen, localToLanguage]);
 
@@ -150,9 +142,11 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   };
 
   const loadSuggestedThemes = async () => {
+    console.log("[loadSuggestedThemes] Starting to load themes for language:", localToLanguage);
     setIsLoadingThemes(true);
     try {
       const themes = await generateThemes(localToLanguage, SUGGESTED_THEMES_COUNT, previousThemes);
+      console.log("[loadSuggestedThemes] Generated themes:", themes);
       setSuggestedThemes(themes);
     } catch (error) {
       console.error('Error loading suggested themes:', error);
