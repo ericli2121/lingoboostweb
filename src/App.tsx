@@ -27,6 +27,9 @@ import {
 } from './utils/analytics';
 
 function App() {
+  // Track API retry attempts for exercise generation
+  const [exerciseAttempt, setExerciseAttempt] = useState<number | null>(null);
+  const [exerciseMaxRetries, setExerciseMaxRetries] = useState<number | null>(null);
   // Authentication state
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -137,6 +140,11 @@ function App() {
     setIsLoadingTranslations(true);
     setCurrentTheme(selectedTheme);
     
+    // Callback for retry status
+    const handleStatusUpdate = (attempt: number, maxRetries: number) => {
+      setExerciseAttempt(attempt);
+      setExerciseMaxRetries(maxRetries);
+    };
     try {
       const result = await generateNewThemeQueue(
         user.id,
@@ -146,17 +154,15 @@ function App() {
         selectedTheme,
         overrideNumberOfExercises || 10,
         overrideRepetitions || 2,
-        setIsCallingAI
+        setIsCallingAI,
+        handleStatusUpdate
       );
 
       if (result.error) {
         console.error('❌ [App] Error generating theme queue:', result.error);
         setTranslationsQueue([]);
-        // Show theme selection again on error
         setShowThemeSelection(true);
       } else {
-        console.log(`✅ [App] Generated queue with ${result.translations.length} translations for theme: "${selectedTheme}"`);
-        // Batch state updates to avoid double refresh
         setTranslationsQueue(result.translations);
         setCurrentTranslationIndex(0);
         setShowThemeSelection(false);
@@ -167,6 +173,8 @@ function App() {
       setShowThemeSelection(true);
     } finally {
       setIsLoadingTranslations(false);
+      setExerciseAttempt(null);
+      setExerciseMaxRetries(null);
     }
   }, [user, fromLanguage, toLanguage, sentenceLength, getLanguageName]);
 
@@ -458,6 +466,8 @@ function App() {
     
     // Then generate queue with the new settings (pass them directly to avoid state timing issues)
     generateQueueForTheme(theme, newFromLanguage, newToLanguage, newSentenceLength, newNumberOfExercises, newRepetitions);
+      // Close the modal to reset local state
+      setShowThemeSelection(false);
   }, [generateQueueForTheme]);
 
   const handleThemeSelectionClose = useCallback(() => {
@@ -480,6 +490,9 @@ function App() {
           <p className="text-slate-600">
             {`Generating ${currentTheme ? `"${currentTheme}"` : 'themed'} practice sentences...`}
           </p>
+          {exerciseAttempt && exerciseMaxRetries && (
+            <p className="text-xs text-slate-500 mt-2">Attempt {exerciseAttempt}/{exerciseMaxRetries}</p>
+          )}
         </div>
       </div>
     );

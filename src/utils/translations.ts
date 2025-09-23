@@ -102,7 +102,8 @@ export async function generateNewThemeQueue(
   theme: string,
   numberOfExercises: number = 20,
   repetitions: number = 3,
-  onAIStatusChange?: (isCallingAI: boolean) => void
+  onAIStatusChange?: (isCallingAI: boolean) => void,
+  onStatusUpdate?: (attempt: number, maxRetries: number) => void
 ): Promise<{ translations: Translation[]; error?: string }> {
   console.log(`🎨 [Queue] Generating new theme queue for: "${theme}" (${numberOfExercises} exercises × ${repetitions} repetitions)`);
   
@@ -122,7 +123,8 @@ export async function generateNewThemeQueue(
       theme,
       numberOfExercises,
       repetitions,
-      previousToSentences
+      previousToSentences,
+      onStatusUpdate
     );
     
     onAIStatusChange?.(false);
