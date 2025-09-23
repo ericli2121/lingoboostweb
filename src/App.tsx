@@ -29,9 +29,6 @@ function App() {
       setUser(session?.user ?? null);
       setAuthLoading(false);
       // Reset session counter when user logs in for the first time
-      if (session?.user) {
-        setSessionSentencesCompleted(0);
-      }
     });
 
     const {
@@ -41,9 +38,10 @@ function App() {
       setUser(session?.user ?? null);
       
       // Reset session counter only when user logs in (was null, now has user)
-      if (!previousUser && session?.user) {
-        setSessionSentencesCompleted(0);
-      }
+      // if (!previousUser && session?.user) {
+      //   console.log('🔄 [Session] Resetting session counter due to auth state change');
+      //   setSessionSentencesCompleted(0);
+      // }
     });
 
     return () => subscription.unsubscribe();
