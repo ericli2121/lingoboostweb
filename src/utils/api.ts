@@ -1,4 +1,5 @@
 // API utility functions for RapidLingo
+import { trackApiCall } from './analytics';
 
 // Retry utility function with timeout and status updates
 const retryWithTimeout = async <T>(
@@ -20,6 +21,10 @@ const retryWithTimeout = async <T>(
       
       const result = await operation();
       console.log(`✅ [Retry] Attempt ${attempt}/${maxRetries} succeeded`);
+      
+      // Track successful API call
+      trackApiCall('api_success', true, attempt);
+      
       return result;
     } catch (error) {
       lastError = error as Error;
@@ -34,6 +39,10 @@ const retryWithTimeout = async <T>(
   }
   
   console.error(`💥 [Retry] All ${maxRetries} attempts failed. Final error:`, lastError.message);
+  
+  // Track failed API call after all retries
+  trackApiCall('api_failure', false, maxRetries);
+  
   // All attempts failed
   throw lastError;
 };

@@ -17,6 +17,14 @@ import { User } from '@supabase/supabase-js';
 import { explainSentence } from './utils/api';
 import { generateNewThemeQueue, saveCompletedSentence, Translation } from './utils/translations';
 import { COMMON_LANGUAGES, MOST_COMMON_LANGUAGES } from './data/languages';
+import { 
+  initializeAnalytics, 
+  trackPageView, 
+  trackExerciseCompletion, 
+  trackThemeSelection, 
+  trackExplanationRequest,
+  trackLanguageEvent
+} from './utils/analytics';
 
 function App() {
   // Authentication state
@@ -46,6 +54,14 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, [user]);
+
+  // Initialize Google Analytics
+  useEffect(() => {
+    // Initialize Analytics on app load
+    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || 'GA_MEASUREMENT_ID';
+    initializeAnalytics(measurementId);
+    trackPageView('App Load');
+  }, []);
 
   // Sign in with Google
   const signInWithGoogle = async () => {
@@ -257,6 +273,15 @@ function App() {
       if (isCompleted) {
         setCompletionStatus('correct');
         
+        // Track exercise completion
+        trackExerciseCompletion(
+          fromLanguage,
+          toLanguage,
+          true,
+          'sentence_construction',
+          currentTheme
+        );
+        
         // Update session counter
         setSessionSentencesCompleted(prev => prev + 1);
         
@@ -304,6 +329,15 @@ function App() {
       } else if (newScrambled.length === 0 && newConstructed.length > 0) {
         // All words used but sentence is incorrect
         setCompletionStatus('incorrect');
+        
+        // Track incorrect exercise completion
+        trackExerciseCompletion(
+          fromLanguage,
+          toLanguage,
+          false,
+          'sentence_construction',
+          currentTheme
+        );
       } else {
         // Reset status if not all words are used
         setCompletionStatus(null);
@@ -339,6 +373,9 @@ function App() {
       setIsLoadingExplanation(true);
       setExplanation('');
       setExplanationRetryStatus('');
+      
+      // Track explanation request
+      trackExplanationRequest(fromLanguage, toLanguage);
       
       try {
         const explanation = await explainSentence(
@@ -408,6 +445,9 @@ function App() {
 
   const handleThemeSelected = useCallback((theme: string, newFromLanguage: string, newToLanguage: string, newSentenceLength: number, newNumberOfExercises: number, newRepetitions: number) => {
     console.log(`🎨 [App] Theme and settings selected:`, { theme, newFromLanguage, newToLanguage, newSentenceLength, newNumberOfExercises, newRepetitions });
+    
+    // Track theme selection
+    trackThemeSelection(theme, newFromLanguage, newToLanguage);
     
     // Apply settings first
     setFromLanguage(newFromLanguage);
