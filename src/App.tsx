@@ -105,7 +105,7 @@ function App() {
   const hasInitiallyLoaded = useRef(false);
 
   // Generate new theme-based queue
-  const generateQueueForTheme = useCallback(async (selectedTheme: string, overrideFromLanguage?: string, overrideToLanguage?: string, overrideSentenceLength?: number) => {
+  const generateQueueForTheme = useCallback(async (selectedTheme: string, overrideFromLanguage?: string, overrideToLanguage?: string, overrideSentenceLength?: number, overrideNumberOfExercises?: number, overrideRepetitions?: number) => {
     if (!user) return;
     
     // Use override values if provided, otherwise use current state
@@ -395,8 +395,8 @@ function App() {
     setShowThemeSelection(true);
   }, []);
 
-  const handleThemeSelected = useCallback((theme: string, newFromLanguage: string, newToLanguage: string, newSentenceLength: number) => {
-    console.log(`🎨 [App] Theme and settings selected:`, { theme, newFromLanguage, newToLanguage, newSentenceLength });
+  const handleThemeSelected = useCallback((theme: string, newFromLanguage: string, newToLanguage: string, newSentenceLength: number, newNumberOfExercises: number, newRepetitions: number) => {
+    console.log(`🎨 [App] Theme and settings selected:`, { theme, newFromLanguage, newToLanguage, newSentenceLength, newNumberOfExercises, newRepetitions });
     
     // Apply settings first
     setFromLanguage(newFromLanguage);
@@ -404,7 +404,7 @@ function App() {
     setSentenceLength(newSentenceLength);
     
     // Then generate queue with the new settings (pass them directly to avoid state timing issues)
-    generateQueueForTheme(theme, newFromLanguage, newToLanguage, newSentenceLength);
+    generateQueueForTheme(theme, newFromLanguage, newToLanguage, newSentenceLength, newNumberOfExercises, newRepetitions);
   }, [generateQueueForTheme]);
 
   const handleThemeSelectionClose = useCallback(() => {

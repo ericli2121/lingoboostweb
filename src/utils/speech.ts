@@ -1,6 +1,8 @@
 export class SpeechService {
   private synthesis: SpeechSynthesis | null = null;
   public voices: SpeechSynthesisVoice[] = [];
+  private isMuted: boolean = false;
+  private speechRate: number = 1.0;
 
   constructor() {
     console.log('SpeechService constructor');
@@ -42,6 +44,12 @@ export class SpeechService {
       return;
     }
 
+    // If muted, skip speech and call onEnd immediately
+    if (this.isMuted) {
+      setTimeout(() => onEnd?.(), 100); // Small delay for better UX
+      return;
+    }
+
     // Cancel any ongoing speech
     this.synthesis.cancel();
 
@@ -54,7 +62,7 @@ export class SpeechService {
     }
     
     utterance.lang = language;
-    utterance.rate = 1.0; // Normal rate
+    utterance.rate = this.speechRate; // Use configurable rate
     utterance.pitch = 1;
     utterance.volume = 0.8;
 
@@ -65,6 +73,25 @@ export class SpeechService {
     }
 
     this.synthesis.speak(utterance);
+  }
+
+  setMuted(muted: boolean) {
+    this.isMuted = muted;
+    if (muted && this.synthesis) {
+      this.synthesis.cancel(); // Stop current speech if muting
+    }
+  }
+
+  isSpeechMuted(): boolean {
+    return this.isMuted;
+  }
+
+  setSpeechRate(rate: number) {
+    this.speechRate = Math.max(0.1, Math.min(2.0, rate)); // Clamp between 0.1 and 2.0
+  }
+
+  getSpeechRate(): number {
+    return this.speechRate;
   }
 
   stop() {

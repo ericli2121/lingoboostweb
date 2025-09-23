@@ -143,7 +143,11 @@ Currently, no authentication is required for these endpoints.
   "to_language": "Vietnamese",
   "subject": "daily life",
   "sentence_length": 5,
-  "count": 10
+  "count": 10,
+  "previous_exercises": [
+      "I like coffee",
+      "The weather is nice"
+  ]
 }
 ```
 
@@ -153,6 +157,8 @@ Currently, no authentication is required for these endpoints.
 - `subject` (string, optional): Theme for sentences
 - `sentence_length` (int, optional): Target sentence length (3-20, default: 5)
 - `count` (int, optional): Number of exercises (default: 10)
+- `previous_exercises` (array, optional): History of previously generated exercises to avoid duplicates
+
 
 **Response**:
 ```json
@@ -161,9 +167,7 @@ Currently, no authentication is required for these endpoints.
   "exercises": [
     {
       "from": "The weather is beautiful today.",
-      "to": "Thời tiết hôm nay đẹp.",
-      "words": ["Thời tiết", "hôm nay", "đẹp"]
-    }
+      "to": "Thời tiết hôm nay đẹp."    }
   ]
 }
 ```
@@ -333,54 +337,6 @@ Currently, no authentication is required for these endpoints.
 
 ---
 
-
-#### `POST /generate_themes`
-**Description**: Generates fun and specific themes/topics for translation exercises that focus on unique vocabulary or grammatical structures.
-
-**Request Body**:
-```json
-{
-  "count": 20,
-  "language": "Vietnamese"
-}
-```
-
-**Parameters**:
-- `count` (int, optional): Number of themes to generate (1-20, default: 50)
-- `language` (string, optional): Target language for exercises (default: "English")
-
-**Response**:
-```json
-{
-  "success": true,
-  "themes": [
-    "cute animals and their baby names",
-    "adjectives to describe personality traits",
-    "conditional sentences about imaginary situations", 
-    "phrases using 'it is too ___ to ___'",
-    "questions using the five W words (who, what, when, where, why)",
-    "present continuous tense for describing current activities",
-    "comparisons between city and countryside life",
-    "past tense stories about childhood memories",
-    "polite requests and formal language",
-    "weather expressions and seasonal activities",
-    "food textures and flavors vocabulary",
-    "emotions and feelings in different contexts",
-    "travel vocabulary for airport situations",
-    "family relationships and kinship terms",
-    "workplace communication phrases",
-    "shopping and bargaining expressions",
-    "health and medical terminology",
-    "technology and social media vocabulary",
-    "environmental and nature topics",
-    "cultural celebrations and traditions"
-  ],
-  "language": "Vietnamese",
-  "count": 20,
-  "total_generated": 20
-}
-`
-
 ## Error Responses
 
 All endpoints return error responses in the following format:
@@ -392,37 +348,52 @@ All endpoints return error responses in the following format:
 }
 ```
 
-### Common Error Codes:
-- **400 Bad Request**: Invalid input parameters
-- **500 Internal Server Error**: Server-side processing error
+### 11. Generate Exercise Themes
 
----
+#### `POST /generate_themes`
+**Description**: Generates fun and specific themes/topics for translation exercises. Includes duplicate prevention through theme history.
 
-## Usage Examples
+**Request Body**:
+```json
+{
+  "count": 20,
+  "language": "Vietnamese",
+  "number_of_words": 6,
+  "previous_themes": [
+    "cute animals",
+    "past tense stories",
+    "food vocabulary",
+    "travel expressions"
+  ]
+}
+```
 
-### Basic Workflow:
-1. **Generate simple exercises**: `POST /generate_exercises_simple`
-2. **Get explanations**: `POST /explain` for sentences, `POST /explain_grammar` for grammar
-3. **Build vocabulary**: `POST /generate_words`
-4. **Evaluate progress**: `POST /evaluate` (with translation history)
-5. **Get advanced exercises**: `POST /generate_exercises` (based on evaluation)
+**Parameters**:
+- `count` (int, optional): Number of themes to generate (1-100, default: 50)
+- `language` (string, optional): Target language for exercises (default: "English")
+- `number_of_words` (int, optional): Used to determine difficulty level (default: 5)
+  - `< 6 words`: beginner level
+  - `6-8 words`: intermediate level
+  - `> 8 words`: advanced level
+- `previous_themes` (array, optional): History of previously generated themes to avoid duplicates
 
-### For Testing:
-1. **Generate exercises**: `POST /generate_exercises_simple`
-2. **Create mock translations**: `POST /generate_mock_translations`
-3. **Evaluate mock performance**: `POST /evaluate`
-
----
-
-## Rate Limits
-Currently no rate limits are enforced, but this may change in production.
-
----
-
-## Support
-For questions or issues, please contact the development team.
-
----
-
-**Last Updated**: December 2024
-**API Version**: 1.0
+**Response**:
+```json
+{
+  "success": true,
+  "level": "intermediate",
+  "themes": [
+    "extinct animals and conservation",
+    "present perfect tense experiences",
+    "cooking methods and kitchen tools",
+    "business travel terminology",
+    "weather patterns and climate change",
+    "family traditions and celebrations",
+    "technology in daily life",
+    "emotions in difficult situations"
+  ],
+  "language": "Vietnamese",
+  "count": 20,
+  "previous_themes_count": 4,
+  "total_generated": 20
+}

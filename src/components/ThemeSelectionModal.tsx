@@ -4,10 +4,12 @@ import { generateThemes } from '../utils/api';
 import { speechService } from '../utils/speech';
 import { LANGUAGE_SPEECH_MAPPING } from '../data/languages';
 
+const SUGGESTED_THEMES_COUNT = 3;
+
 interface ThemeSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectTheme: (theme: string, fromLanguage: string, toLanguage: string, sentenceLength: number) => void;
+  onSelectTheme: (theme: string, fromLanguage: string, toLanguage: string, sentenceLength: number, numberOfExercises: number, repetitions: number) => void;
   onClearTheme?: () => void;
   toLanguage: string;
   fromLanguage: string;
@@ -38,14 +40,15 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [isLoadingThemes, setIsLoadingThemes] = useState(false);
   const [hasToLanguageAudio, setHasToLanguageAudio] = useState(true);
   
-  // State for expandable language lists
-  const [showAllFromLanguages, setShowAllFromLanguages] = useState(false);
-  const [showAllToLanguages, setShowAllToLanguages] = useState(false);
+  // State for expandable language lists (single state controls both dropdowns)
+  const [showAllLanguages, setShowAllLanguages] = useState(false);
   
   // Local state for settings
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
   const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
   const [localSentenceLength, setLocalSentenceLength] = useState(sentenceLength);
+  const [numberOfExercises, setNumberOfExercises] = useState(20);
+  const [repetitions, setRepetitions] = useState(1);
   
   // Ref to track if we've already loaded themes for this modal opening
   const hasLoadedForCurrentSession = useRef(false);
@@ -143,7 +146,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const loadSuggestedThemes = async () => {
     setIsLoadingThemes(true);
     try {
-      const themes = await generateThemes(localToLanguage, 5);
+      const themes = await generateThemes(localToLanguage, SUGGESTED_THEMES_COUNT);
       setSuggestedThemes(themes);
     } catch (error) {
       console.error('Error loading suggested themes:', error);
@@ -161,15 +164,13 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   // Combined loading state - buttons should be disabled if either local or global loading is active
   const isLoading = isLoadingThemes;
 
-  // Helper function to render expandable language select
+  // Helper function to render language select
   const renderLanguageSelect = (
     label: string,
     value: string,
-    onChange: (value: string) => void,
-    showAll: boolean,
-    setShowAll: (show: boolean) => void
+    onChange: (value: string) => void
   ) => {
-    const languagesToShow = showAll ? availableLanguages : mostCommonLanguages;
+    const languagesToShow = showAllLanguages ? availableLanguages : mostCommonLanguages;
     const isCurrentLanguageInCommon = mostCommonLanguages.some(lang => lang.code === value);
     
     return (
@@ -186,30 +187,12 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           {languagesToShow.map(lang => (
             <option key={lang.code} value={lang.code}>{lang.name}</option>
           ))}
-          {!showAll && !isCurrentLanguageInCommon && (
+          {!showAllLanguages && !isCurrentLanguageInCommon && (
             <option value={value}>
               {availableLanguages.find(lang => lang.code === value)?.name || value}
             </option>
           )}
         </select>
-        
-        {!showAll ? (
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="text-xs text-blue-600 hover:text-blue-700 mt-1 block"
-          >
-            More languages... ({availableLanguages.length - mostCommonLanguages.length} more)
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowAll(false)}
-            className="text-xs text-blue-600 hover:text-blue-700 mt-1 block"
-          >
-            Show fewer languages
-          </button>
-        )}
       </div>
     );
   };
@@ -222,7 +205,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       return;
     }
     
-    onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength);
+    onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength, numberOfExercises, repetitions);
     // setCustomTheme('');
   };
 
@@ -232,7 +215,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       return;
     }
     
-    onSelectTheme(theme, localFromLanguage, localToLanguage, localSentenceLength);
+    onSelectTheme(theme, localFromLanguage, localToLanguage, localSentenceLength, numberOfExercises, repetitions);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -290,21 +273,28 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 
           {/* Language Settings */}
           <div className="mb-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
               {renderLanguageSelect(
                 "1. From Language",
                 localFromLanguage,
-                setLocalFromLanguage,
-                showAllFromLanguages,
-                setShowAllFromLanguages
+                setLocalFromLanguage
               )}
               {renderLanguageSelect(
                 "To Language",
                 localToLanguage,
-                setLocalToLanguage,
-                showAllToLanguages,
-                setShowAllToLanguages
+                setLocalToLanguage
               )}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowAllLanguages(!showAllLanguages)}
+                  className="w-8 h-8 flex items-center justify-center border border-slate-300 rounded bg-white hover:bg-slate-50 text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="More languages"
+                  disabled={isLoading}
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
 
@@ -341,36 +331,107 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
             </div>
           )}
 
-          {/* Sentence Length */}
-          <div className="mb-4">
-            <label className="block text-slate-700 text-sm font-medium mb-1">
-              2. Sentence Length
+          {/* Exercise Generation Settings */}
+          <div className="mb-3">
+            <label className="block text-slate-700 text-sm font-medium mb-2">
+              2. Exercise Generation
             </label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setLocalSentenceLength(Math.max(3, localSentenceLength - 1))}
-                disabled={localSentenceLength <= 3 || isLoading}
-                className="w-6 h-6 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                −
-              </button>
-              <div className="flex-1 text-center">
-                <span className="text-sm font-medium text-slate-700 bg-slate-50 px-3 py-1 rounded border border-slate-200">
-                  {localSentenceLength} words
-                </span>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {/* Number of Exercises */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-slate-600 font-medium">Exercises</span>
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setNumberOfExercises(Math.max(10, numberOfExercises - 1))}
+                    disabled={numberOfExercises <= 10 || isLoading}
+                    className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-r-0 rounded-l"
+                  >
+                    −
+                  </button>
+                  <div className="h-7 flex items-center justify-center border-t border-b border-slate-300 bg-slate-50 px-3 min-w-[50px]">
+                    <span className="text-sm font-medium text-slate-700">
+                      {numberOfExercises}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNumberOfExercises(Math.min(30, numberOfExercises + 1))}
+                    disabled={numberOfExercises >= 30 || isLoading}
+                    className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-l-0 rounded-r"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setLocalSentenceLength(Math.min(15, localSentenceLength + 1))}
-                disabled={localSentenceLength >= 15 || isLoading}
-                className="w-6 h-6 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                +
-              </button>
+
+              {/* Repetitions */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-slate-600 font-medium">Repetitions</span>
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setRepetitions(Math.max(1, repetitions - 1))}
+                    disabled={repetitions <= 1 || isLoading}
+                    className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-r-0 rounded-l"
+                  >
+                    −
+                  </button>
+                  <div className="h-7 flex items-center justify-center border-t border-b border-slate-300 bg-slate-50 px-3 min-w-[50px]">
+                    <span className="text-sm font-medium text-slate-700">
+                      {repetitions}x
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRepetitions(Math.min(3, repetitions + 1))}
+                    disabled={repetitions >= 3 || isLoading}
+                    className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-l-0 rounded-r"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-2">
+              ⚡ More exercises = longer practice • More repetitions = better retention
+
+            </p>
+            {/* Sentence Length */}
+            <div className="mt-3">
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-xs text-slate-600 font-medium">Sentence Length</span>
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setLocalSentenceLength(Math.max(3, localSentenceLength - 1))}
+                    disabled={localSentenceLength <= 3 || isLoading}
+                    className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-r-0 rounded-l"
+                  >
+                    −
+                  </button>
+                  <div className="h-7 flex items-center justify-center border-t border-b border-slate-300 bg-slate-50 px-3 min-w-[70px]">
+                    <span className="text-sm font-medium text-slate-700">
+                      {localSentenceLength} words
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLocalSentenceLength(Math.min(15, localSentenceLength + 1))}
+                    disabled={localSentenceLength >= 15 || isLoading}
+                    className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-l-0 rounded-r"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <p className="text-xs text-slate-500 mt-2">
               💡 Beginner: 3-5 words • Intermediate: 6-8 words • Advanced: 9+ words
+
             </p>
           </div>
 
