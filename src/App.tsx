@@ -487,7 +487,7 @@ function App() {
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
-          <p className="text-slate-600">
+          <p className="text-slate-600 px-6">
             {`Generating ${currentTheme ? `"${currentTheme}"` : 'themed'} practice sentences...`}
           </p>
           {exerciseAttempt && exerciseMaxRetries && (
