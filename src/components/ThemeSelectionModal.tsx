@@ -493,9 +493,18 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 
           {/* Suggested Themes */}
           <div className="mb-4">
-            <label className="block text-slate-700 text-sm font-medium mb-2">
-              or, choose a suggested theme
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-slate-700 text-sm font-medium">
+                or, choose a suggested theme
+              </label>
+              <button
+                onClick={loadSuggestedThemes}
+                disabled={isLoadingThemes || isLoading}
+                className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50"
+              >
+                🔄 Get New Suggestions
+              </button>
+            </div>
             
             {isLoadingThemes ? (
               <div className="flex items-center justify-center py-4">
@@ -528,17 +537,6 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 )}
               </div>
             )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-start items-center">
-            <button
-              onClick={loadSuggestedThemes}
-              disabled={isLoadingThemes || isLoading}
-              className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50"
-            >
-              🔄 Get New Suggestions
-            </button>
           </div>
         </div>
       </div>
