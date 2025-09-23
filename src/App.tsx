@@ -16,6 +16,7 @@ import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
 import { explainSentence } from './utils/api';
 import { generateNewThemeQueue, saveCompletedSentence, Translation } from './utils/translations';
+import { COMMON_LANGUAGES } from './data/languages';
 
 function App() {
   // Authentication state
@@ -88,22 +89,6 @@ function App() {
   // Theme selection modal state
   const [showThemeSelection, setShowThemeSelection] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('');
-  
-  const COMMON_LANGUAGES = [
-    { code: 'en', name: 'English' },
-    { code: 'es', name: 'Spanish' },
-    { code: 'fr', name: 'French' },
-    { code: 'de', name: 'German' },
-    { code: 'it', name: 'Italian' },
-    { code: 'pt', name: 'Portuguese' },
-    { code: 'ru', name: 'Russian' },
-    { code: 'zh', name: 'Chinese' },
-    { code: 'ja', name: 'Japanese' },
-    { code: 'ko', name: 'Korean' },
-    { code: 'vi', name: 'Vietnamese' },
-    { code: 'ar', name: 'Arabic' },
-    { code: 'hi', name: 'Hindi' },
-  ];
 
   const getLanguageName = useCallback((code: string) => {
     return COMMON_LANGUAGES.find(lang => lang.code === code)?.name || code;
@@ -198,7 +183,7 @@ function App() {
   // Show theme selection when queue is empty or index is out of bounds
   useEffect(() => {
     if (user && hasInitiallyLoaded.current && !isLoadingTranslations) {
-      if (translationsQueue.length === 0 || currentTranslationIndex >= translationsQueue.length) {
+      if ((translationsQueue.length === 0 || currentTranslationIndex >= translationsQueue.length) && !showThemeSelection) {
         console.log(`📋 [App] Showing theme selection - Queue length: ${translationsQueue.length}, Index: ${currentTranslationIndex}`);
         setShowThemeSelection(true);
         setGameState(null);
@@ -434,7 +419,7 @@ function App() {
   }, []);
 
   // Only show loading screen when actively generating translations
-  if (isLoadingTranslations && translationsQueue.length === 0) {
+  if (isLoadingTranslations) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
@@ -680,6 +665,7 @@ function App() {
         availableLanguages={COMMON_LANGUAGES}
         currentTheme={currentTheme}
         queueLength={translationsQueue.length}
+        isLoadingTranslations={isLoadingTranslations}
       />
     </div>
   );

@@ -1,7 +1,9 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { generateThemes } from '../utils/api';
 import { speechService } from '../utils/speech';
+import { LANGUAGE_SPEECH_MAPPING } from '../data/languages';
+import { isSet } from 'util/types';
 
 interface ThemeSelectionModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ interface ThemeSelectionModalProps {
   availableLanguages: Array<{ code: string; name: string }>;
   currentTheme?: string;
   queueLength: number;
+  isLoadingTranslations: boolean;
 }
 
 export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
@@ -26,7 +29,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   sentenceLength,
   availableLanguages,
   currentTheme,
-  queueLength
+  queueLength,
+  isLoadingTranslations
 }) => {
   const [customTheme, setCustomTheme] = useState('');
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
@@ -37,27 +41,54 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
   const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
   const [localSentenceLength, setLocalSentenceLength] = useState(sentenceLength);
-
+  
+  // Ref to track if we've already loaded themes for this modal opening
+  const hasLoadedForCurrentSession = useRef(false);
   // Initialize customTheme with currentTheme when modal opens
-  useEffect(() => {
-    if (isOpen && currentTheme) {
-      setCustomTheme(currentTheme);
-    }
-  }, [isOpen, currentTheme]);
+  // useEffect(() => {
+  //   if (isOpen && currentTheme) {
+  //     setCustomTheme(currentTheme);
+  //   }
+  //   // Reset local loading state when modal reopens (in case of error)
+  //   if (isOpen) {
+  //     setIsSelectingTheme(false);
+  //   }
+  // }, [isOpen, currentTheme]);
 
   // Update local state when props change
   useEffect(() => {
     setLocalFromLanguage(fromLanguage);
-    setLocalToLanguage(toLanguage);
     setLocalSentenceLength(sentenceLength);
-  }, [fromLanguage, toLanguage, sentenceLength]);
+  }, [fromLanguage, sentenceLength]);
+
+  // Update localToLanguage when toLanguage prop changes
+  useEffect(() => {
+    console.log("[UseEffect] toLanguage changed:", toLanguage);
+    // Only update if the value actually changed
+    if (localToLanguage !== toLanguage) {
+      console.log("[UseEffect] toLanguage - ACTUALLY UPDATING");
+      setLocalToLanguage(toLanguage);
+      // Reset the session flag so themes will reload with new language
+      hasLoadedForCurrentSession.current = false;
+    } else {
+      console.log("[UseEffect] toLanguage - SKIPPED (same value)");
+    }
+  }, [toLanguage, localToLanguage]);
 
   // Load suggested themes when modal opens or language changes
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasLoadedForCurrentSession.current) {
+      console.log("[UseEffect] loadSuggestedThemes - EXECUTING");
+      hasLoadedForCurrentSession.current = true;
       loadSuggestedThemes();
       // Also recheck audio when modal opens in case voices weren't loaded before
       checkAudioAvailability();
+    } else if (isOpen && hasLoadedForCurrentSession.current) {
+      console.log("[UseEffect] loadSuggestedThemes - SKIPPED (already loaded)");
+    } else if (!isOpen) {
+      // Reset the flag when modal closes
+      hasLoadedForCurrentSession.current = false;
+      console.log("[UseEffect] loadSuggestedThemes - RESET FLAG (modal closed)");
     }
   }, [isOpen, localToLanguage]);
 
@@ -90,23 +121,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       }
       
       // Map language codes to common speech synthesis language codes
-      const languageMapping: { [key: string]: string[] } = {
-        'en': ['en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IN', 'en-IE', 'en-NZ', 'en-ZA'],
-        'es': ['es-ES', 'es-MX', 'es-AR', 'es-CO', 'es-CL', 'es-PE', 'es-VE', 'es-US'],
-        'fr': ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH'],
-        'de': ['de-DE', 'de-AT', 'de-CH'],
-        'it': ['it-IT', 'it-CH'],
-        'pt': ['pt-BR', 'pt-PT'],
-        'ru': ['ru-RU'],
-        'zh': ['zh-CN', 'zh-TW', 'zh-HK'],
-        'ja': ['ja-JP'],
-        'ko': ['ko-KR'],
-        'vi': ['vi-VN'],
-        'ar': ['ar-SA', 'ar-AE', 'ar-EG', 'ar-JO', 'ar-KW', 'ar-LB', 'ar-QA'],
-        'hi': ['hi-IN']
-      };
-
-      const targetLanguageCodes = languageMapping[localToLanguage] || [localToLanguage];
+      const targetLanguageCodes = LANGUAGE_SPEECH_MAPPING[localToLanguage] || [localToLanguage];
       
       const hasVoice = voices.some(voice => 
         targetLanguageCodes.some(code => 
@@ -138,6 +153,9 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
     return localFromLanguage !== localToLanguage;
   };
 
+  // Combined loading state - buttons should be disabled if either local or global loading is active
+  const isLoading = isLoadingThemes;
+
   const handleSelectCustomTheme = () => {
     if (!customTheme.trim()) return;
     
@@ -147,7 +165,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
     }
     
     onSelectTheme(customTheme.trim(), localFromLanguage, localToLanguage, localSentenceLength);
-    setCustomTheme('');
+    // setCustomTheme('');
   };
 
   const handleSelectSuggestedTheme = (theme: string) => {
@@ -223,6 +241,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                   className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                   value={localFromLanguage}
                   onChange={(e) => setLocalFromLanguage(e.target.value)}
+                  disabled={isLoading}
                 >
                   {availableLanguages.map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -237,6 +256,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                   className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                   value={localToLanguage}
                   onChange={(e) => setLocalToLanguage(e.target.value)}
+                  disabled={isLoading}
                 >
                   {availableLanguages.map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -288,7 +308,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               <button
                 type="button"
                 onClick={() => setLocalSentenceLength(Math.max(3, localSentenceLength - 1))}
-                disabled={localSentenceLength <= 3}
+                disabled={localSentenceLength <= 3 || isLoading}
                 className="w-6 h-6 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 −
@@ -301,7 +321,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               <button
                 type="button"
                 onClick={() => setLocalSentenceLength(Math.min(15, localSentenceLength + 1))}
-                disabled={localSentenceLength >= 15}
+                disabled={localSentenceLength >= 15 || isLoading}
                 className="w-6 h-6 flex items-center justify-center rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 +
@@ -311,6 +331,18 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               💡 Beginner: 3-5 words • Intermediate: 6-8 words • Advanced: 9+ words
             </p>
           </div>
+
+          {/* Loading Indicator */}
+          {/* {isLoading && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-blue-700 text-sm font-medium">
+                  Generating themed practice sentences...
+                </span>
+              </div>
+            </div>
+          )} */}
 
           {/* Custom Theme Input */}
           <div className="mb-4">
@@ -329,17 +361,18 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 onKeyPress={handleKeyPress}
                 placeholder={currentTheme ? `${currentTheme}` : "Enter your own theme..."}
                 className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                disabled={isLoading}
               />
               <button
                 onClick={handleSelectCustomTheme}
-                disabled={!customTheme.trim() || !areLanguagesDifferent()}
+                disabled={!customTheme.trim() || !areLanguagesDifferent() || isLoading}
                 className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Use
+                {isLoading ? 'Loading...' : 'Use'}
               </button>
               <button
                 onClick={() => setCustomTheme('')}
-                disabled={!customTheme.trim()}
+                disabled={!customTheme.trim() || isLoading}
                 className="px-2 py-1 bg-slate-200 text-slate-600 text-sm rounded hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Clear input"
               >
@@ -365,14 +398,16 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                   <button
                     key={index}
                     onClick={() => handleSelectSuggestedTheme(theme)}
-                    disabled={!areLanguagesDifferent()}
+                    disabled={!areLanguagesDifferent() || isLoading}
                     className={`w-full text-left p-2 text-sm border border-slate-200 rounded transition-colors duration-200 ${
-                      !areLanguagesDifferent() 
+                      !areLanguagesDifferent() || isLoading
                         ? 'opacity-50 cursor-not-allowed bg-slate-100' 
                         : 'hover:bg-slate-50 hover:border-blue-300'
                     }`}
                   >
-                    <span className="text-slate-700">{theme}</span>
+                    <span className="text-slate-700">
+                      {isLoading ? 'Loading...' : theme}
+                    </span>
                   </button>
                 ))}
                 
@@ -389,7 +424,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           <div className="flex justify-start items-center">
             <button
               onClick={loadSuggestedThemes}
-              disabled={isLoadingThemes}
+              disabled={isLoadingThemes || isLoading}
               className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50"
             >
               🔄 Get New Suggestions
