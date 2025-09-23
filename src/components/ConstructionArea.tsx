@@ -44,7 +44,6 @@ export const ConstructionArea: React.FC<ConstructionAreaProps> = ({
             <div key={`${word}-${index}`}>
               <WordButton
                 word={word}
-                index={index}
                 onClick={onWordClick}
               />
             </div>

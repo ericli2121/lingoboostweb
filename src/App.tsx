@@ -367,80 +367,45 @@ function App() {
     } else {
       // Move to next translation
       console.log(`📚 [App] Manually moving to translation ${nextIndex + 1} of ${translationsQueue.length}`);
-        const isInConstruction = gameState.constructedWords.includes(word);
-        if (isInConstruction) {
-          // Remove from construction area
-          const { newScrambled, newConstructed } = removeWordFromConstruction(
-            word,
-            gameState.scrambledWords,
-            gameState.constructedWords
-          );
-          setGameState(prev => prev ? {
-            ...prev,
-            scrambledWords: newScrambled,
-            constructedWords: newConstructed,
-            isCompleted: false
-          } : null);
-          setCompletionStatus(null); // Reset completion status when removing words
-        } else {
-          // Add to construction area
-          const { newScrambled, newConstructed } = moveWordToConstruction(
-            word,
-            gameState.scrambledWords,
-            gameState.constructedWords
-          );
-          const isCompleted = checkCompletion(newConstructed, gameState.currentSentence.to);
-          setGameState(prev => prev ? {
-            ...prev,
-            scrambledWords: newScrambled,
-            constructedWords: newConstructed,
-            isCompleted
-          } : null);
-          // Check for completion
-          if (isCompleted) {
-            setCompletionStatus('correct');
-            // ...existing code...
-          } else if (newScrambled.length === 0 && newConstructed.length > 0) {
-            // ...existing code...
-          } else {
-            // ...existing code...
+      setCurrentTranslationIndex(nextIndex);
+    }
+  }, [currentTranslationIndex, translationsQueue]);
+
+  const handleReplay = useCallback(() => {
+    initializeGame();
+  }, [initializeGame]);
+
+  const handleExplain = useCallback(async () => {
+    if (gameState) {
+      setShowExplanation(true);
+      setIsLoadingExplanation(true);
+      setExplanation('');
+      setExplanationRetryStatus('');
+      
+      // Track explanation request
+      trackExplanationRequest(fromLanguage, toLanguage);
+      
+      try {
+        const explanation = await explainSentence(
+          gameState.currentSentence.to,
+          getLanguageName(fromLanguage),
+          getLanguageName(toLanguage),
+          (attempt, maxRetries) => {
+            console.log(`🔄 [App] Status update: Attempting ${attempt}/${maxRetries}...`);
+            setExplanationRetryStatus(`Attempting ${attempt}/${maxRetries}...`);
           }
-        }
-        const scrambledIndex = gameState.scrambledWords.findIndex((w, i) => w === word && i === arguments[1]);
-        const constructedIndex = gameState.constructedWords.findIndex((w, i) => w === word && i === arguments[1]);
-        if (constructedIndex !== -1) {
-          // Remove from construction area by index
-          const newConstructed = [...gameState.constructedWords];
-          const [removed] = newConstructed.splice(constructedIndex, 1);
-          const newScrambled = [...gameState.scrambledWords, removed];
-          setGameState(prev => prev ? {
-            ...prev,
-            scrambledWords: newScrambled,
-            constructedWords: newConstructed,
-            isCompleted: false
-          } : null);
-          setCompletionStatus(null);
-        } else if (scrambledIndex !== -1) {
-          // Add to construction area by index
-          const newScrambled = [...gameState.scrambledWords];
-          const [moved] = newScrambled.splice(scrambledIndex, 1);
-          const newConstructed = [...gameState.constructedWords, moved];
-          const isCompleted = checkCompletion(newConstructed, gameState.currentSentence.to);
-          setGameState(prev => prev ? {
-            ...prev,
-            scrambledWords: newScrambled,
-            constructedWords: newConstructed,
-            isCompleted
-          } : null);
-          if (isCompleted) {
-            setCompletionStatus('correct');
-            // ...existing code...
-          } else if (newScrambled.length === 0 && newConstructed.length > 0) {
-            // ...existing code...
-          } else {
-            // ...existing code...
-          }
-        }
+        );
+        setExplanation(explanation);
+        setExplanationRetryStatus('');
+      } catch (error) {
+        console.error('🚨 [App] Final error after all retries:', error);
+        setExplanation(error.message);
+        setExplanationRetryStatus('');
+      } finally {
+        setIsLoadingExplanation(false);
+      }
+    }
+  }, [gameState, fromLanguage, toLanguage, getLanguageName]);
 
   const handleBack = useCallback(() => {
     if (currentTranslationIndex > 0) {
