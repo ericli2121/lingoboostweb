@@ -5,6 +5,36 @@ export interface Language {
   name: string;
 }
 
+// Most commonly used languages worldwide (shown by default)
+export const MOST_COMMON_LANGUAGES: Language[] = [
+  { code: 'en', name: 'English' },
+  { code: 'zh', name: 'Chinese' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'bn', name: 'Bengali' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'pa', name: 'Punjabi' },
+  { code: 'de', name: 'German' },
+  { code: 'jv', name: 'Javanese' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'fr', name: 'French' },
+  { code: 'te', name: 'Telugu' },
+  { code: 'mr', name: 'Marathi' },
+  { code: 'tr', name: 'Turkish' },
+  { code: 'ta', name: 'Tamil' },
+  { code: 'vi', name: 'Vietnamese' },
+  { code: 'ur', name: 'Urdu' },
+  { code: 'it', name: 'Italian' },
+  { code: 'th', name: 'Thai' },
+  { code: 'gu', name: 'Gujarati' },
+  { code: 'fa', name: 'Persian' },
+  { code: 'pl', name: 'Polish' },
+];
+
+// Complete list of all supported languages
 export const COMMON_LANGUAGES: Language[] = [
   { code: 'af', name: 'Afrikaans' },
   { code: 'am', name: 'Amharic' },

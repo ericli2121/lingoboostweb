@@ -16,7 +16,7 @@ import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
 import { explainSentence } from './utils/api';
 import { generateNewThemeQueue, saveCompletedSentence, Translation } from './utils/translations';
-import { COMMON_LANGUAGES } from './data/languages';
+import { COMMON_LANGUAGES, MOST_COMMON_LANGUAGES } from './data/languages';
 
 function App() {
   // Authentication state
@@ -663,6 +663,7 @@ function App() {
         fromLanguage={fromLanguage}
         sentenceLength={sentenceLength}
         availableLanguages={COMMON_LANGUAGES}
+        mostCommonLanguages={MOST_COMMON_LANGUAGES}
         currentTheme={currentTheme}
         queueLength={translationsQueue.length}
         isLoadingTranslations={isLoadingTranslations}

@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { generateThemes } from '../utils/api';
 import { speechService } from '../utils/speech';
 import { LANGUAGE_SPEECH_MAPPING } from '../data/languages';
-import { isSet } from 'util/types';
 
 interface ThemeSelectionModalProps {
   isOpen: boolean;
@@ -14,6 +13,7 @@ interface ThemeSelectionModalProps {
   fromLanguage: string;
   sentenceLength: number;
   availableLanguages: Array<{ code: string; name: string }>;
+  mostCommonLanguages: Array<{ code: string; name: string }>;
   currentTheme?: string;
   queueLength: number;
   isLoadingTranslations: boolean;
@@ -28,6 +28,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   fromLanguage,
   sentenceLength,
   availableLanguages,
+  mostCommonLanguages,
   currentTheme,
   queueLength,
   isLoadingTranslations
@@ -36,6 +37,10 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(false);
   const [hasToLanguageAudio, setHasToLanguageAudio] = useState(true);
+  
+  // State for expandable language lists
+  const [showAllFromLanguages, setShowAllFromLanguages] = useState(false);
+  const [showAllToLanguages, setShowAllToLanguages] = useState(false);
   
   // Local state for settings
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
@@ -156,6 +161,59 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   // Combined loading state - buttons should be disabled if either local or global loading is active
   const isLoading = isLoadingThemes;
 
+  // Helper function to render expandable language select
+  const renderLanguageSelect = (
+    label: string,
+    value: string,
+    onChange: (value: string) => void,
+    showAll: boolean,
+    setShowAll: (show: boolean) => void
+  ) => {
+    const languagesToShow = showAll ? availableLanguages : mostCommonLanguages;
+    const isCurrentLanguageInCommon = mostCommonLanguages.some(lang => lang.code === value);
+    
+    return (
+      <div>
+        <label className="block text-slate-700 text-sm font-medium mb-1">
+          {label}
+        </label>
+        <select
+          className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={isLoading}
+        >
+          {languagesToShow.map(lang => (
+            <option key={lang.code} value={lang.code}>{lang.name}</option>
+          ))}
+          {!showAll && !isCurrentLanguageInCommon && (
+            <option value={value}>
+              {availableLanguages.find(lang => lang.code === value)?.name || value}
+            </option>
+          )}
+        </select>
+        
+        {!showAll ? (
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="text-xs text-blue-600 hover:text-blue-700 mt-1 block"
+          >
+            More languages... ({availableLanguages.length - mostCommonLanguages.length} more)
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowAll(false)}
+            className="text-xs text-blue-600 hover:text-blue-700 mt-1 block"
+          >
+            Show fewer languages
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const handleSelectCustomTheme = () => {
     if (!customTheme.trim()) return;
     
@@ -233,36 +291,20 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           {/* Language Settings */}
           <div className="mb-4">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-700 text-sm font-medium mb-1">
-                  1. From Language
-                </label>
-                <select
-                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={localFromLanguage}
-                  onChange={(e) => setLocalFromLanguage(e.target.value)}
-                  disabled={isLoading}
-                >
-                  {availableLanguages.map(lang => (
-                    <option key={lang.code} value={lang.code}>{lang.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-slate-700 text-sm font-medium mb-1">
-                  To Language
-                </label>
-                <select
-                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={localToLanguage}
-                  onChange={(e) => setLocalToLanguage(e.target.value)}
-                  disabled={isLoading}
-                >
-                  {availableLanguages.map(lang => (
-                    <option key={lang.code} value={lang.code}>{lang.name}</option>
-                  ))}
-                </select>
-              </div>
+              {renderLanguageSelect(
+                "1. From Language",
+                localFromLanguage,
+                setLocalFromLanguage,
+                showAllFromLanguages,
+                setShowAllFromLanguages
+              )}
+              {renderLanguageSelect(
+                "To Language",
+                localToLanguage,
+                setLocalToLanguage,
+                showAllToLanguages,
+                setShowAllToLanguages
+              )}
             </div>
           </div>
 
