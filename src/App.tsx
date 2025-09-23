@@ -614,6 +614,17 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-screen-2xl mx-auto px-6 py-4 overflow-y-auto">
+        {/* Top Banner Ad */}
+        <div className="mb-4">
+          <GoogleAd
+            dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_BANNER_SLOT || '0987654321'}
+            dataAdFormat="horizontal"
+            dataFullWidthResponsive={true}
+            style={{ display: 'block', textAlign: 'center', minHeight: '90px' }}
+            className="banner-ad"
+          />
+        </div>
+        
         {gameState ? (
           <div className="space-y-3">
             {/* English Reference Sentence */}
@@ -678,15 +689,16 @@ function App() {
           />
         )}
 
-        {/* Google Ad
+        {/* Google Ad - Main Content Area */}
         <div className="mt-6">
           <GoogleAd
-            dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT}
+            dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT || '1234567890'}
             dataAdFormat="auto"
             dataFullWidthResponsive={true}
             style={{ display: 'block', textAlign: 'center' }}
+            className="mt-4 mb-4"
           />
-        </div> */}
+        </div>
       </main>
 
       {/* Modals */}

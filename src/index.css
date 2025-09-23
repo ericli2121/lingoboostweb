@@ -70,11 +70,28 @@
   }
 
   /* Ad styling */
-  .ad-container {
-    @apply w-full max-w-md mx-auto p-2;
+  .google-ad-container {
+    @apply w-full mx-auto;
+  }
+  
+  .google-ad-container.banner-ad {
+    @apply max-w-4xl;
   }
 
-  .ad-container .adsbygoogle {
-    @apply rounded-lg overflow-hidden shadow-sm;
+  .google-ad-container .adsbygoogle {
+    @apply rounded-lg overflow-hidden;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+  
+  /* Ad placeholder styling for better UX */
+  .google-ad-container .adsbygoogle:empty {
+    @apply min-h-[90px] flex items-center justify-center;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  }
+  
+  .google-ad-container .adsbygoogle:empty::after {
+    content: "";
+    @apply w-8 h-8 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin;
   }
 }
