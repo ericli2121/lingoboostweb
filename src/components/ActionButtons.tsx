@@ -103,6 +103,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
             <option value={1.2}>1.2x</option>
             <option value={1.5}>1.5x</option>
           </select>
+          <span className="text-xs font-extralight">powered by <a href="https://mistral.ai/" target='_blank'>Mistral AI</a></span>
         </div>
       </div>
     </div>
