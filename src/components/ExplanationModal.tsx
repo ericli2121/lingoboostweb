@@ -5,13 +5,15 @@ interface ExplanationModalProps {
   onClose: () => void;
   explanation: string;
   isLoading: boolean;
+  retryStatus?: string;
 }
 
 export const ExplanationModal: React.FC<ExplanationModalProps> = ({
   isOpen,
   onClose,
   explanation,
-  isLoading
+  isLoading,
+  retryStatus
 }) => {
   if (!isOpen) return null;
 
@@ -34,7 +36,12 @@ export const ExplanationModal: React.FC<ExplanationModalProps> = ({
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-                <span className="ml-2">Loading explanation...</span>
+                <div className="ml-2">
+                  <span>Loading explanation...</span>
+                  {retryStatus && (
+                    <div className="text-sm text-slate-500 mt-1">{retryStatus}</div>
+                  )}
+                </div>
               </div>
             ) : (
               <p className="whitespace-pre-wrap">{explanation}</p>

@@ -79,6 +79,7 @@ function App() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+  const [explanationRetryStatus, setExplanationRetryStatus] = useState('');
   const [completionStatus, setCompletionStatus] = useState<'correct' | 'incorrect' | null>(null);
   
   // Debug state
@@ -337,16 +338,24 @@ function App() {
       setShowExplanation(true);
       setIsLoadingExplanation(true);
       setExplanation('');
+      setExplanationRetryStatus('');
       
       try {
         const explanation = await explainSentence(
           gameState.currentSentence.to,
           getLanguageName(fromLanguage),
-          getLanguageName(toLanguage)
+          getLanguageName(toLanguage),
+          (attempt, maxRetries) => {
+            console.log(`🔄 [App] Status update: Attempting ${attempt}/${maxRetries}...`);
+            setExplanationRetryStatus(`Attempting ${attempt}/${maxRetries}...`);
+          }
         );
         setExplanation(explanation);
+        setExplanationRetryStatus('');
       } catch (error) {
+        console.error('🚨 [App] Final error after all retries:', error);
         setExplanation(error.message);
+        setExplanationRetryStatus('');
       } finally {
         setIsLoadingExplanation(false);
       }
@@ -660,6 +669,7 @@ function App() {
         onClose={() => setShowExplanation(false)}
         explanation={explanation}
         isLoading={isLoadingExplanation}
+        retryStatus={explanationRetryStatus}
       />
 
       <ThemeSelectionModal

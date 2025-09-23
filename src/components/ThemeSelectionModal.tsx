@@ -43,6 +43,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [suggestedThemes, setSuggestedThemes] = useState<string[]>([]);
   const [previousThemes, setPreviousThemes] = useState<string[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(false);
+  const [themesRetryStatus, setThemesRetryStatus] = useState('');
   const [hasToLanguageAudio, setHasToLanguageAudio] = useState(true);
   
   // State for expandable language lists (single state controls both dropdowns)
@@ -144,13 +145,23 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const loadSuggestedThemes = async () => {
     console.log("[loadSuggestedThemes] Starting to load themes for language:", localToLanguage);
     setIsLoadingThemes(true);
+    setThemesRetryStatus('');
     try {
-      const themes = await generateThemes(localToLanguage, SUGGESTED_THEMES_COUNT, previousThemes);
+      const themes = await generateThemes(
+        localToLanguage, 
+        SUGGESTED_THEMES_COUNT, 
+        previousThemes,
+        (attempt, maxRetries) => {
+          setThemesRetryStatus(`Attempting ${attempt}/${maxRetries}...`);
+        }
+      );
       console.log("[loadSuggestedThemes] Generated themes:", themes);
       setSuggestedThemes(themes);
+      setThemesRetryStatus('');
     } catch (error) {
       console.error('Error loading suggested themes:', error);
       setSuggestedThemes([]);
+      setThemesRetryStatus('');
     } finally {
       setIsLoadingThemes(false);
     }
@@ -509,7 +520,12 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
             {isLoadingThemes ? (
               <div className="flex items-center justify-center py-4">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-sm text-slate-600">Loading suggestions...</span>
+                <div className="ml-2">
+                  <span className="text-sm text-slate-600">Loading suggestions...</span>
+                  {themesRetryStatus && (
+                    <div className="text-xs text-slate-500 mt-1">{themesRetryStatus}</div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="space-y-1 max-h-48 overflow-y-auto">

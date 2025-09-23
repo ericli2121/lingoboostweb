@@ -1,34 +1,88 @@
 // API utility functions for RapidLingo
 
+// Retry utility function with timeout and status updates
+const retryWithTimeout = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  timeoutMs: number = 2000,
+  onStatusUpdate?: (attempt: number, maxRetries: number) => void
+): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 [Retry] Starting attempt ${attempt}/${maxRetries}`);
+      
+      // Only show status updates starting from the second attempt (actual retries)
+      if (onStatusUpdate && attempt > 1) {
+        onStatusUpdate(attempt, maxRetries);
+      }
+      
+      const result = await operation();
+      console.log(`✅ [Retry] Attempt ${attempt}/${maxRetries} succeeded`);
+      return result;
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`❌ [Retry] Attempt ${attempt}/${maxRetries} failed:`, error.message);
+      
+      // If this isn't the last attempt, wait before retrying
+      if (attempt < maxRetries) {
+        console.log(`⏱️ [Retry] Waiting ${timeoutMs}ms before attempt ${attempt + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, timeoutMs));
+      }
+    }
+  }
+  
+  console.error(`💥 [Retry] All ${maxRetries} attempts failed. Final error:`, lastError.message);
+  // All attempts failed
+  throw lastError;
+};
+
 export const explainSentence = async (
   sentence: string,
   fromLanguage: string,
-  toLanguage: string
+  toLanguage: string,
+  onStatusUpdate?: (attempt: number, maxRetries: number) => void
 ): Promise<string> => {
   try {
-    const baseUrl = import.meta.env.VITE_BASE_URL;
-    const response = await fetch(`${baseUrl}/explain`, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+    return await retryWithTimeout(
+      async () => {
+        const baseUrl = import.meta.env.VITE_BASE_URL;
+        const response = await fetch(`${baseUrl}/explain`, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            sentence,
+            from_language: fromLanguage,
+            to_language: toLanguage
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const explanation = data.explanation || '';
+        
+        // Validate that we actually got an explanation back
+        if (!explanation || explanation.trim().length === 0) {
+          throw new Error('API returned empty explanation');
+        }
+        
+        console.log(`✅ [API] Successfully got explanation (${explanation.length} characters)`);
+        return explanation;
       },
-      body: JSON.stringify({
-        sentence,
-        from_language: fromLanguage,
-        to_language: toLanguage
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.explanation || 'No explanation available.';
+      3,
+      2000,
+      onStatusUpdate
+    );
   } catch (error) {
-    console.error('Error fetching explanation:', error);
+    console.error('Error fetching explanation after all retries:', error);
     
     // Check if it's a CORS error
     if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -57,35 +111,51 @@ export interface ThemeResponse {
 export const generateThemes = async (
   language: string,
   count: number = 5,
-  previousThemes: string[] = []
+  previousThemes: string[] = [],
+  onStatusUpdate?: (attempt: number, maxRetries: number) => void
 ): Promise<string[]> => {
   try {
-    const baseUrl = import.meta.env.VITE_BASE_URL;
-    const response = await fetch(`${baseUrl}/generate_themes`, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+    return await retryWithTimeout(
+      async () => {
+        const baseUrl = import.meta.env.VITE_BASE_URL;
+        const response = await fetch(`${baseUrl}/generate_themes`, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            language,
+            count,
+            previous_themes: previousThemes
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: ThemeResponse = await response.json();
+        const themes = data.themes || [];
+        
+        // Validate that we actually got themes back
+        if (themes.length === 0) {
+          throw new Error('API returned no themes');
+        }
+        
+        console.log(`✅ [API] Successfully generated ${themes.length} themes`);
+        return themes;
       },
-      body: JSON.stringify({
-        language,
-        count,
-        previous_themes: previousThemes
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: ThemeResponse = await response.json();
-    return data.themes || [];
+      3,
+      2000,
+      onStatusUpdate
+    );
   } catch (error) {
     console.error('Error generating themes:', error);
     
-    // Return mock themes for testing when API is not available
-    console.log('🎨 [API] Using mock themes since API is not available');
+    // Return mock themes for testing when API is not available after all retries
+    console.log('🎨 [API] Using mock themes since API is not available after retries');
     
     const mockThemes = [
       "cute animals and their baby names",
@@ -115,38 +185,48 @@ export const generateExercisesSimple = async (
   sentenceLength: number,
   theme?: string,
   count: number = 10,
-  previousExercises: string[] = []
+  previousExercises: string[] = [],
+  onStatusUpdate?: (attempt: number, maxRetries: number) => void
 ): Promise<Exercise[]> => {
-  try {
-    const baseUrl = import.meta.env.VITE_BASE_URL;
-    const response = await fetch(`${baseUrl}/generate_exercises_simple`, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        from_language: fromLanguage,
-        to_language: toLanguage,
-        sentence_length: sentenceLength,
-        subject: theme || undefined,
-        count,
-        previous_exercises: previousExercises
-      }),
-    });
+  return retryWithTimeout(
+    async () => {
+      const baseUrl = import.meta.env.VITE_BASE_URL;
+      const response = await fetch(`${baseUrl}/generate_exercises_simple`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          from_language: fromLanguage,
+          to_language: toLanguage,
+          sentence_length: sentenceLength,
+          subject: theme || undefined,
+          count,
+          previous_exercises: previousExercises
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const data = await response.json();
-    console.log('Generated exercises:', data.exercises);
-    return data.exercises || [];
-  } catch (error) {
-    console.error('Error generating exercises:', error);
-    throw error;
-  }
+      const data = await response.json();
+      const exercises = data.exercises || [];
+      
+      // Validate that we actually got exercises back
+      if (exercises.length === 0) {
+        throw new Error('API returned no exercises');
+      }
+      
+      console.log(`✅ [API] Successfully generated ${exercises.length} exercises`);
+      return exercises;
+    },
+    3,
+    2000,
+    onStatusUpdate
+  );
 };
 
 /**
@@ -159,7 +239,8 @@ export const generateThemeQueue = async (
   theme: string,
   numberOfExercises: number = 20,
   repetitions: number = 3,
-  previousExercises: string[] = []
+  previousExercises: string[] = [],
+  onStatusUpdate?: (attempt: number, maxRetries: number) => void
 ): Promise<Exercise[]> => {
   console.log(`🎨 [API] Generating theme queue for: "${theme}" (${numberOfExercises} exercises × ${repetitions} repetitions)`);
   
@@ -170,7 +251,8 @@ export const generateThemeQueue = async (
     sentenceLength,
     theme,
     numberOfExercises,
-    previousExercises
+    previousExercises,
+    onStatusUpdate
   );
   
   if (uniqueExercises.length === 0) {
