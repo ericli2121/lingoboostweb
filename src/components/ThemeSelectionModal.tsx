@@ -302,7 +302,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 localToLanguage,
                 setLocalToLanguage
               )}
-              <div>
+              {/* <div>
                 <button
                   type="button"
                   onClick={() => setShowAllLanguages(!showAllLanguages)}
@@ -312,7 +312,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 >
                   !
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
 
