@@ -11,7 +11,7 @@ declare global {
 export const initializeAnalytics = (measurementId: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('config', measurementId, {
-      page_title: 'RapidLingo',
+      page_title: 'RapidLingo.ai',
       page_location: window.location.href,
     });
   }

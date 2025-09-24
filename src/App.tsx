@@ -488,7 +488,9 @@ function App() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
           <p className="text-slate-600 px-6">
-            {`Generating ${currentTheme ? `"${currentTheme}"` : 'themed'} practice sentences...`}
+              AI generating practice ...
+              <br />
+              {currentTheme ? `"${currentTheme}"` : 'themed'}
           </p>
           {exerciseAttempt && exerciseMaxRetries && (
             <p className="text-xs text-slate-500 mt-2">Attempt {exerciseAttempt}/{exerciseMaxRetries}</p>
@@ -543,9 +545,9 @@ function App() {
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           {/* Main row with centered title and profile/settings */}
           <div className="flex justify-center items-center relative mb-3 sm:mb-4">
-            {/* Centered RapidLingo title */}
+            {/* Centered RapidLingo.AI title */}
             <h1 className="text-xl font-bold text-slate-800">
-              RapidLingo
+              RapidLingo.AI
             </h1>
             
             {/* Right side - Profile and settings (absolute positioned) */}

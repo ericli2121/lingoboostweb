@@ -47,7 +47,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const [hasToLanguageAudio, setHasToLanguageAudio] = useState(true);
   
   // State for expandable language lists (single state controls both dropdowns)
-  const [showAllLanguages, setShowAllLanguages] = useState(false);
+  const [showAllLanguages, setShowAllLanguages] = useState(true);
   
   // Local state for settings
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
@@ -173,7 +173,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   };
 
   // Combined loading state - buttons should be disabled if either local or global loading is active
-  const isLoading = isLoadingThemes;
+  const isLoading = false; // isLoadingThemes
 
   // Helper function to render language select
   const renderLanguageSelect = (
@@ -310,7 +310,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                   title="More languages"
                   disabled={isLoading}
                 >
-                  +
+                  !
                 </button>
               </div>
             </div>
@@ -362,8 +362,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 <div className="flex items-center">
                   <button
                     type="button"
-                    onClick={() => setLocalNumberOfExercises(Math.max(10, localNumberOfExercises - 1))}
-                    disabled={localNumberOfExercises <= 10 || isLoading}
+                    onClick={() => setLocalNumberOfExercises(Math.max(5, localNumberOfExercises - 1))}
+                    disabled={localNumberOfExercises <= 5 || isLoading}
                     className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-r-0 rounded-l"
                   >
                     −
@@ -403,8 +403,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setLocalRepetitions(Math.min(3, localRepetitions + 1))}
-                    disabled={localRepetitions >= 3 || isLoading}
+                    onClick={() => setLocalRepetitions(Math.min(5, localRepetitions + 1))}
+                    disabled={localRepetitions >= 5 || isLoading}
                     className="w-7 h-7 flex items-center justify-center border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm border-l-0 rounded-r"
                   >
                     +
@@ -521,7 +521,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               <div className="flex items-center justify-center py-4">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                 <div className="ml-2">
-                  <span className="text-sm text-slate-600">Loading suggestions...</span>
+                  <span className="text-sm text-slate-600">AI generating suggestions...</span>
                   {themesRetryStatus && (
                     <div className="text-xs text-slate-500 mt-1">{themesRetryStatus}</div>
                   )}

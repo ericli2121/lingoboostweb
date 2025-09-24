@@ -1,7 +1,7 @@
 export class SpeechService {
   private synthesis: SpeechSynthesis | null = null;
   public voices: SpeechSynthesisVoice[] = [];
-  private isMuted: boolean = false;
+  private isMuted: boolean = true;
   private speechRate: number = 1.0;
 
   constructor() {
