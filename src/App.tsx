@@ -225,7 +225,7 @@ function App() {
         currentTranslationIndex < translationsQueue.length && 
         !isLoadingTranslations) {
       console.log(`🎮 [App] Initializing game for translation ${currentTranslationIndex + 1}/${translationsQueue.length}`);
-      initializeGame();
+    initializeGame();
     }
   }, [translationsQueue.length, currentTranslationIndex, isLoadingTranslations]);
 
@@ -484,33 +484,20 @@ function App() {
   // Only show loading screen when actively generating translations
   if (isLoadingTranslations) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50 relative">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
-          <p className="text-slate-600 px-6">
-              AI generating exercises ...
-              <br />
-              {currentTheme ? `"${currentTheme}"` : 'themed'}
-          </p>
+      <>
+        <div className="h-screen flex items-center justify-center bg-slate-50 relative">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
+            <p className="text-slate-600 px-6">
+                AI generating exercises ...
+                <br />
+                {currentTheme ? `"${currentTheme}"` : 'themed'}
+            </p>
+          </div>
         </div>
-        
-        {/* Google AdSense Ads - During Loading */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-yellow-300 p-1 w-full max-w-4xl px-4">
-          <GoogleAd
-            dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE || '0987654321'}
-            dataAdFormat="horizontal"
-            dataFullWidthResponsive={true}
-            style={{ 
-              display: 'block', 
-              textAlign: 'center',
-              minHeight: '60px',
-              maxHeight: '15vh',
-              width: '100%'
-            }}
-            className="mt-1 mb-1"
-          />
-        </div>
-      </div>
+
+       
+      </>
     );
   }
 
@@ -553,7 +540,8 @@ function App() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
+    <>
+      <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       {/* Header with settings */}
       <header className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
@@ -562,7 +550,7 @@ function App() {
             {/* Centered RapidLingo.AI title */}
             <h1 className="text-xl font-bold text-slate-800">
               RapidLingo.AI
-            </h1>
+          </h1>
             
             {/* Right side - Profile and settings (absolute positioned) */}
             <div className="absolute right-0 flex items-center gap-4">
@@ -643,16 +631,7 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-screen-2xl mx-auto px-6 py-4 overflow-y-auto">
-        {/* Top Banner Ad */}
-        {/* <div className="mb-4">
-          <GoogleAd
-            dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_BANNER_SLOT || '0987654321'}
-            dataAdFormat="horizontal"
-            dataFullWidthResponsive={true}
-            style={{ display: 'block', textAlign: 'center', minHeight: '90px' }}
-            className="banner-ad"
-          />
-        </div> */}
+
         
         {gameState ? (
           <div className="space-y-3">
@@ -675,23 +654,23 @@ function App() {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
                 <h3 className="text-sm font-medium text-green-800 mb-2">Answer:</h3>
                 <p className="text-lg text-green-700">{gameState.currentSentence.to}</p>
-              </div>
+          </div>
             )}
 
             {/* Words */}
             <div className="mt-2">
               <div className="flex flex-wrap gap-2 min-h-20 items-center">
-                {gameState.scrambledWords.map((word, index) => (
+              {gameState.scrambledWords.map((word, index) => (
                   <div key={`${word}-${index}`}>
-                    <WordButton
-                      word={word}
-                      onClick={handleWordClick}
-                    />
-                  </div>
-                ))}
-              </div>
+                  <WordButton
+                    word={word}
+                    onClick={handleWordClick}
+                  />
+                </div>
+              ))}
             </div>
           </div>
+        </div>
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -708,19 +687,19 @@ function App() {
 
         {/* Action Buttons - only show when gameState exists */}
         {gameState && (
-          <ActionButtons
-            onExplain={handleExplain}
-            onBack={handleBack}
-            onRevealAnswer={handleRevealAnswer}
+        <ActionButtons
+          onExplain={handleExplain}
+          onBack={handleBack}
+          onRevealAnswer={handleRevealAnswer}
             // onStatistics={handleStatistics} // Disabled for now
-            showAnswer={gameState.showAnswer}
+          showAnswer={gameState.showAnswer}
             disabled={isReadingSentence}
           />
         )}
 
         {/* Google AdSense Ads - Below Action Buttons */}
         <div className={`mt-2 bg-yellow-300 p-1 ${gameState && !isLoadingTranslations ? 'block' : 'hidden'}`}>
-          <GoogleAd
+         {/*  <GoogleAd
             dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT || '1234567890'}
             dataAdFormat="horizontal"
             dataFullWidthResponsive={true}
@@ -732,7 +711,7 @@ function App() {
               width: '100%'
             }}
             className="mt-1 mb-1"
-          />
+          /> */}
         </div>
       </main>
 
@@ -776,6 +755,46 @@ function App() {
         isLoadingTranslations={isLoadingTranslations}
       />
     </div>
+
+      {/* Google AdSense Ads - Loading Page Ad - Only visible when loading */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 bg-yellow-300 p-1 z-40"
+        style={{
+          pointerEvents: isLoadingTranslations ? 'auto' : 'none',
+          minHeight: '60px',
+          width: '100vw',
+          maxWidth: '100vw',
+          display: 'flex',
+          justifyContent: 'center'
+        }}
+      >
+        <div 
+          style={{
+            width: '100%',
+            maxWidth: '1024px',
+            minHeight: '60px'
+          }}
+        >
+        {/* Debug info */}
+        <div className="text-xs text-black bg-white p-1 mb-1">
+          DEBUG: VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE = {import.meta.env.VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE || 'NOT SET'}
+        </div>
+        <GoogleAd
+          dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE || '0987654321'}
+          dataAdFormat="horizontal"
+          dataFullWidthResponsive={true}
+          style={{ 
+            display: 'block', 
+            textAlign: 'center',
+            minHeight: '60px',
+            maxHeight: '15vh',
+            width: '100%'
+          }}
+          className="mt-1 mb-1"
+        />
+        </div>
+      </div>
+    </>
   );
 }
 
