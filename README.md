@@ -1,4 +1,4 @@
-# LingoBoost - Language Learning Web App
+# RapidLingo - Language Learning Web App
 
 A responsive React web application that helps users practice sentence construction in their target language (Vietnamese) using their known language (English) as guidance.
 

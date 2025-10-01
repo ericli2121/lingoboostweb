@@ -1,7 +1,7 @@
-# LingoBoost AI API Documentation
+# RapidLingo AI API Documentation
 
 ## Overview
-LingoBoost AI is a FastAPI-based language learning platform that provides AI-powered translation exercises, grammar explanations, vocabulary generation, and performance evaluation for language learners.
+RapidLingo AI is a FastAPI-based language learning platform that provides AI-powered translation exercises, grammar explanations, vocabulary generation, and performance evaluation for language learners.
 
 **Base URL**: `https://your-domain.com` (or `http://localhost:8000` for local development)
 

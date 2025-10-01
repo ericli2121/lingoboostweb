@@ -1,7 +1,7 @@
 import { Statistics } from '../types';
 
-const STATS_KEY = 'lingoboost-stats';
-const CURRENT_INDEX_KEY = 'lingoboost-current-index';
+const STATS_KEY = 'rapidlingo-stats';
+const CURRENT_INDEX_KEY = 'rapidlingo-current-index';
 
 export function loadStatistics(): Statistics {
   try {

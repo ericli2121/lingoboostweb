@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'LingoBoost - Language Learning',
-        short_name: 'LingoBoost',
+        name: 'RapidLingo - Language Learning',
+        short_name: 'RapidLingo',
         description: 'Practice sentence construction in your target language',
         theme_color: '#ffffff',
         background_color: '#f8fafc',

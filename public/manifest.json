@@ -1,6 +1,6 @@
 {
-  "name": "LingoBoost - Language Learning",
-  "short_name": "LingoBoost",
+  "name": "RapidLingo - Language Learning",
+  "short_name": "RapidLingo",
   "description": "Practice sentence construction in your target language",
   "start_url": "/lingoboostweb/",
   "display": "standalone",

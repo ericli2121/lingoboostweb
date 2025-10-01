@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ericli2121.github.io/lingoboostweb/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
