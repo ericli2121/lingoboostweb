@@ -49,6 +49,12 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   // State for expandable language lists (single state controls both dropdowns)
   const [showAllLanguages, setShowAllLanguages] = useState(true);
   
+  // State for custom language input
+  const [customFromLanguage, setCustomFromLanguage] = useState('');
+  const [customToLanguage, setCustomToLanguage] = useState('');
+  const [showCustomFromInput, setShowCustomFromInput] = useState(false);
+  const [showCustomToInput, setShowCustomToInput] = useState(false);
+  
   // Local state for settings
   const [localFromLanguage, setLocalFromLanguage] = useState(fromLanguage);
   const [localToLanguage, setLocalToLanguage] = useState(toLanguage);
@@ -169,41 +175,120 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 
   // Validation function to check if languages are different
   const areLanguagesDifferent = () => {
-    return localFromLanguage !== localToLanguage;
+    return localFromLanguage.toLowerCase().trim() !== localToLanguage.toLowerCase().trim();
   };
 
   // Combined loading state - buttons should be disabled if either local or global loading is active
   const isLoading = false; // isLoadingThemes
 
-  // Helper function to render language select
+  // Helper function to render language select with custom input support
   const renderLanguageSelect = (
     label: string,
     value: string,
-    onChange: (value: string) => void
+    onChange: (value: string) => void,
+    isFromLanguage: boolean = false
   ) => {
     const languagesToShow = showAllLanguages ? availableLanguages : mostCommonLanguages;
     const isCurrentLanguageInCommon = mostCommonLanguages.some(lang => lang.code === value);
+    const isCurrentLanguageInAvailable = availableLanguages.some(lang => lang.code === value);
+    const showCustomInput = isFromLanguage ? showCustomFromInput : showCustomToInput;
+    const customValue = isFromLanguage ? customFromLanguage : customToLanguage;
+    const setCustomValue = isFromLanguage ? setCustomFromLanguage : setCustomToLanguage;
+    const setShowCustomInput = isFromLanguage ? setShowCustomFromInput : setShowCustomToInput;
+    
+    const handleCustomLanguageSubmit = () => {
+      if (customValue.trim()) {
+        onChange(customValue.trim());
+        setCustomValue('');
+        setShowCustomInput(false);
+      }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleCustomLanguageSubmit();
+      } else if (e.key === 'Escape') {
+        setCustomValue('');
+        setShowCustomInput(false);
+      }
+    };
     
     return (
       <div>
         <label className="block text-slate-700 text-sm font-medium mb-1">
           {label}
         </label>
-        <select
-          className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={isLoading}
-        >
-          {languagesToShow.map(lang => (
-            <option key={lang.code} value={lang.code}>{lang.name}</option>
-          ))}
-          {!showAllLanguages && !isCurrentLanguageInCommon && (
-            <option value={value}>
-              {availableLanguages.find(lang => lang.code === value)?.name || value}
-            </option>
-          )}
-        </select>
+        
+        {!showCustomInput ? (
+          <div className="flex gap-1">
+            <select
+              className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              disabled={isLoading}
+            >
+              {languagesToShow.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.name}</option>
+              ))}
+              {!showAllLanguages && !isCurrentLanguageInCommon && (
+                <option value={value}>
+                  {availableLanguages.find(lang => lang.code === value)?.name || value}
+                </option>
+              )}
+              {/* Always show current value if it's not in the available languages */}
+              {!isCurrentLanguageInAvailable && (
+                <option value={value}>{value}</option>
+              )}
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomValue(value);
+                setShowCustomInput(true);
+              }}
+              className="px-2 py-1 text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 hover:text-slate-800 disabled:opacity-50"
+              disabled={isLoading}
+              title="Type custom language"
+            >
+              ✏️
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-1">
+            <input
+              type="text"
+              value={customValue}
+              onChange={(e) => setCustomValue(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Type language name..."
+              className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              disabled={isLoading}
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={handleCustomLanguageSubmit}
+              disabled={!customValue.trim() || isLoading}
+              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Use custom language"
+            >
+              ✓
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomValue('');
+                setShowCustomInput(false);
+              }}
+              className="px-2 py-1 text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 rounded"
+              title="Cancel"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        
+
       </div>
     );
   };
@@ -295,12 +380,14 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               {renderLanguageSelect(
                 "1. From Language",
                 localFromLanguage,
-                setLocalFromLanguage
+                setLocalFromLanguage,
+                true
               )}
               {renderLanguageSelect(
                 "To Language",
                 localToLanguage,
-                setLocalToLanguage
+                setLocalToLanguage,
+                false
               )}
               {/* <div>
                 <button
@@ -332,7 +419,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                 <div>
                   <p className="font-medium text-sm">Audio not available</p>
                   <p className="text-xs text-amber-700 leading-relaxed">
-                    Voice synthesis for {availableLanguages.find(lang => lang.code === localToLanguage)?.name} is not available on your device. The learning experience will work, but without pronunciation audio.
+                    Voice synthesis for {availableLanguages.find(lang => lang.code === localToLanguage)?.name || localToLanguage} is not available on your device. The learning experience will work, but without pronunciation audio.
                   </p>
                 </div>
               </div>
