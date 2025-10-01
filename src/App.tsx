@@ -484,17 +484,31 @@ function App() {
   // Only show loading screen when actively generating translations
   if (isLoadingTranslations) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
+      <div className="h-screen flex items-center justify-center bg-slate-50 relative">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4" />
           <p className="text-slate-600 px-6">
-              AI generating practice ...
+              AI generating exercises ...
               <br />
               {currentTheme ? `"${currentTheme}"` : 'themed'}
           </p>
-          {exerciseAttempt && exerciseMaxRetries && (
-            <p className="text-xs text-slate-500 mt-2">Attempt {exerciseAttempt}/{exerciseMaxRetries}</p>
-          )}
+        </div>
+        
+        {/* Google AdSense Ads - During Loading */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-yellow-300 p-1 w-full max-w-4xl px-4">
+          <GoogleAd
+            dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE || '0987654321'}
+            dataAdFormat="horizontal"
+            dataFullWidthResponsive={true}
+            style={{ 
+              display: 'block', 
+              textAlign: 'center',
+              minHeight: '60px',
+              maxHeight: '15vh',
+              width: '100%'
+            }}
+            className="mt-1 mb-1"
+          />
         </div>
       </div>
     );

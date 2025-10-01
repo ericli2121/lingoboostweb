@@ -44,13 +44,6 @@ export const GoogleAd: React.FC<GoogleAdProps> = ({
 
   const clientId = import.meta.env.VITE_GOOGLE_ADSENSE_CLIENT;
 
-  // Debug logging
-  console.log('GoogleAd Debug:', {
-    clientId: clientId ? 'SET' : 'NOT SET',
-    dataAdSlot,
-    hasWindowAdsense: !!window.adsbygoogle
-  });
-
   if (!clientId) {
     return (
       <div className="bg-red-200 p-4 text-center text-red-800">
