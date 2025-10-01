@@ -704,16 +704,22 @@ function App() {
           />
         )}
 
-        {/* Google Ad - Main Content Area */}
-        {/* <div className="mt-6">
+        {/* Google AdSense Ads - Below Action Buttons */}
+        <div className={`mt-2 bg-yellow-300 p-1 ${gameState && !isLoadingTranslations ? 'block' : 'hidden'}`}>
           <GoogleAd
             dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT || '1234567890'}
-            dataAdFormat="auto"
+            dataAdFormat="horizontal"
             dataFullWidthResponsive={true}
-            style={{ display: 'block', textAlign: 'center' }}
-            className="mt-4 mb-4"
+            style={{ 
+              display: 'block', 
+              textAlign: 'center',
+              minHeight: '60px',
+              maxHeight: '5vh',
+              width: '100%'
+            }}
+            className="mt-1 mb-1"
           />
-        </div> */}
+        </div>
       </main>
 
       {/* Modals */}

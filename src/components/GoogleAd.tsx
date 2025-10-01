@@ -29,8 +29,14 @@ export const GoogleAd: React.FC<GoogleAdProps> = ({
         window.adsbygoogle = window.adsbygoogle || [];
       }
       
-      // Push the ad
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      // Check if ad is already loaded to prevent duplicate pushes
+      const adElements = document.querySelectorAll('.adsbygoogle');
+      const hasUnloadedAds = Array.from(adElements).some(el => !el.getAttribute('data-adsbygoogle-status'));
+      
+      if (hasUnloadedAds) {
+        // Push the ad only if there are unloaded ads
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
     } catch (error) {
       console.error('AdSense error:', error);
     }
@@ -38,8 +44,19 @@ export const GoogleAd: React.FC<GoogleAdProps> = ({
 
   const clientId = import.meta.env.VITE_GOOGLE_ADSENSE_CLIENT;
 
+  // Debug logging
+  console.log('GoogleAd Debug:', {
+    clientId: clientId ? 'SET' : 'NOT SET',
+    dataAdSlot,
+    hasWindowAdsense: !!window.adsbygoogle
+  });
+
   if (!clientId) {
-    return null; // Don't render if no client ID
+    return (
+      <div className="bg-red-200 p-4 text-center text-red-800">
+        DEBUG: No VITE_GOOGLE_ADSENSE_CLIENT environment variable set
+      </div>
+    );
   }
 
   return (
