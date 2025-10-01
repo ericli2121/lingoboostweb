@@ -64,33 +64,21 @@ function splitCJKSentence(sentence: string): string[] {
 }
 
 function splitThaiSentence(sentence: string): string[] {
-  // For Thai, split by characters but try to keep some meaningful groups
+  // Remove spaces and split into random word groups of 1-4 characters
+  const cleanText = sentence.replace(/\s+/g, '');
   const chunks: string[] = [];
   let i = 0;
   
-  while (i < sentence.length) {
-    const char = sentence[i];
+  while (i < cleanText.length) {
+    // Randomly choose group size between 1-4, but don't exceed remaining characters
+    const maxGroupSize = Math.min(4, cleanText.length - i);
+    const groupSize = Math.floor(Math.random() * maxGroupSize) + 1;
     
-    // Skip spaces
-    if (/\s/.test(char)) {
-      i++;
-      continue;
-    }
+    // Extract the group
+    const group = cleanText.substring(i, i + groupSize);
+    chunks.push(group);
     
-    // For Thai vowels and tone marks, combine with previous character
-    if (i > 0 && /[\u0e31\u0e34-\u0e3a\u0e47-\u0e4e]/.test(char)) {
-      if (chunks.length > 0) {
-        chunks[chunks.length - 1] += char;
-      } else {
-        chunks.push(char);
-      }
-      i++;
-      continue;
-    }
-    
-    // Regular character
-    chunks.push(char);
-    i++;
+    i += groupSize;
   }
   
   return chunks.filter(chunk => chunk.trim() !== '');
@@ -98,7 +86,7 @@ function splitThaiSentence(sentence: string): string[] {
 
 export function scrambleWords(sentence: string): WordItem[] {
   // Detect language type and handle accordingly
-  if (isCJKLanguage(sentence) || isThaiLanguage(sentence)) {
+  if (isCJKLanguage(sentence)) {
     const chunks = splitCJKSentence(sentence);
     const scrambled = [...chunks];
     
