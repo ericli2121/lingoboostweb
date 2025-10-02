@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
+// Extend window object to include adsbygoogle
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
+
 interface GoogleAdProps {
   dataAdSlot: string;
   dataAdFormat?: string;
