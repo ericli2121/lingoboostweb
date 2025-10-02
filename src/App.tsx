@@ -8,7 +8,7 @@ import { WordButton } from './components/WordButton';
 import { ConstructionArea } from './components/ConstructionArea';
 import { ActionButtons } from './components/ActionButtons';
 import { StatisticsModal } from './components/StatisticsModal';
-import { GoogleAd } from './components/GoogleAd';
+import { PropellerAds } from './components/PropellerAds';
 import { ExplanationModal } from './components/ExplanationModal';
 import { ThemeSelectionModal } from './components/ThemeSelectionModal';
 import { HistoryModal } from './components/HistoryModal';
@@ -514,6 +514,36 @@ function App() {
                 <br />
                 {currentTheme ? `"${currentTheme}"` : 'themed'}
             </p>
+
+
+            <PropellerAds
+              zoneId={import.meta.env.VITE_PROPELLERADS_ZONE_ID_LOADING || '0987654321'}
+              adFormat="banner"
+              style={{ 
+                display: 'block', 
+                textAlign: 'center',
+                minHeight: '90px',
+                width: '100%',
+                maxWidth: '728px',
+                margin: '0 auto',
+                marginTop: '50px'
+              }}
+              className="mt-1 mb-1"
+            />
+            <PropellerAds
+              zoneId={import.meta.env.VITE_PROPELLERADS_ZONE_ID_LOADING_2 || '0987654321'}
+              adFormat="banner"
+              style={{ 
+                display: 'block', 
+                textAlign: 'center',
+                minHeight: '90px',
+                width: '100%',
+                maxWidth: '728px',
+                margin: '0 auto',
+                marginTop: '10px'
+              }}
+              className="mt-1 mb-1"
+            />
           </div>
         </div>
 
@@ -736,13 +766,12 @@ function App() {
           />
         )}
 
-        {/* Google AdSense Ads - Below Action Buttons */}
+        {/* PropellerAds - Below Action Buttons */}
         {gameState && !isLoadingTranslations && (
-          <div className="mt-2 bg-yellow-300 p-1">
-            <GoogleAd
-              dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT || '1234567890'}
-              dataAdFormat="horizontal"
-              dataFullWidthResponsive={true}
+          <div className="mt-2p-1">
+            <PropellerAds
+              zoneId={import.meta.env.VITE_PROPELLERADS_ZONE_ID || '1234567890'}
+              adFormat="onclick"
               style={{ 
                 display: 'block', 
                 textAlign: 'center',
@@ -813,45 +842,7 @@ function App() {
       />
     </div>
 
-      {/* Google AdSense Ads - Loading Page Ad - Only visible when loading */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 bg-yellow-300 p-1 z-40"
-        style={{
-          pointerEvents: isLoadingTranslations ? 'auto' : 'none',
-          minHeight: '60px',
-          width: '100vw',
-          maxWidth: '100vw',
-          display: 'flex',
-          justifyContent: 'center'
-        }}
-      >
-        <div 
-          style={{
-            width: '100%',
-            maxWidth: '1024px',
-            minHeight: '60px'
-          }}
-        >
-        {/* Debug info */}
-        <div className="text-xs text-black bg-white p-1 mb-1">
-          DEBUG: VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE = {import.meta.env.VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE || 'NOT SET'}
-        </div>
-        <GoogleAd
-          dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE || '0987654321'}
-          dataAdFormat="horizontal"
-          dataFullWidthResponsive={true}
-          style={{ 
-            display: 'block', 
-            textAlign: 'center',
-            minHeight: '90px',
-            width: '100%',
-            maxWidth: '728px',
-            margin: '0 auto'
-          }}
-          className="mt-1 mb-1"
-        />
-        </div>
-      </div>
+     
     </>
   );
 }

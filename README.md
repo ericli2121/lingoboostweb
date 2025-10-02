@@ -25,6 +25,20 @@ npm run dev
 
 3. Open your browser and navigate to `http://localhost:5173`
 
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```bash
+# PropellerAds Configuration
+# Get your Zone IDs from your PropellerAds dashboard
+VITE_PROPELLERADS_ZONE_ID=your_main_zone_id_here
+VITE_PROPELLERADS_ZONE_ID_LOADING=your_loading_page_zone_id_here
+
+# Base URL for the application
+VITE_BASE_URL=http://localhost:5173
+```
+
 ## Building for Production
 
 ```bash
@@ -43,6 +57,7 @@ npx gh-pages -d dist -f
 - **Framer Motion** for animations
 - **Vite** for fast development and building
 - **PWA** capabilities with service worker
+- **PropellerAds** for monetization
 
 ## Game Mechanics
 
