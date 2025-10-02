@@ -12,6 +12,9 @@ import { GoogleAd } from './components/GoogleAd';
 import { ExplanationModal } from './components/ExplanationModal';
 import { ThemeSelectionModal } from './components/ThemeSelectionModal';
 import { HistoryModal } from './components/HistoryModal';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
+import { UserGuideModal } from './components/UserGuideModal';
+import { AboutUsModal } from './components/AboutUsModal';
 import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
 import { explainSentence } from './utils/api';
@@ -119,6 +122,9 @@ function App() {
   const [sessionSentencesCompleted, setSessionSentencesCompleted] = useState(0);
   const [showStats, setShowStats] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showUserGuide, setShowUserGuide] = useState(false);
+  const [showAboutUs, setShowAboutUs] = useState(false);
   const [translationsQueue, setTranslationsQueue] = useState<Translation[]>([]);
   const [currentTranslationIndex, setCurrentTranslationIndex] = useState(0);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(false);
@@ -446,6 +452,21 @@ function App() {
     setShowProfileMenu(false);
   }, []);
 
+  const handlePrivacyPolicy = useCallback(() => {
+    setShowPrivacyPolicy(true);
+    setShowProfileMenu(false);
+  }, []);
+
+  const handleUserGuide = useCallback(() => {
+    setShowUserGuide(true);
+    setShowProfileMenu(false);
+  }, []);
+
+  const handleAboutUs = useCallback(() => {
+    setShowAboutUs(true);
+    setShowProfileMenu(false);
+  }, []);
+
   const handleOpenSettings = useCallback(() => {
     // Open the theme selection modal which now includes settings
     setShowThemeSelection(true);
@@ -582,6 +603,24 @@ function App() {
                       className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
                     >
                       History
+                    </button>
+                    <button
+                      onClick={handleUserGuide}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                    >
+                      User Guide
+                    </button>
+                    <button
+                      onClick={handlePrivacyPolicy}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                    >
+                      Privacy Policy
+                    </button>
+                    <button
+                      onClick={handleAboutUs}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                    >
+                      About Us
                     </button>
                     <button
                       onClick={() => {
@@ -731,6 +770,21 @@ function App() {
         userId={user?.id || ''}
         fromLanguage={getLanguageName(fromLanguage)}
         toLanguage={getLanguageName(toLanguage)}
+      />
+
+      <PrivacyPolicyModal
+        isOpen={showPrivacyPolicy}
+        onClose={() => setShowPrivacyPolicy(false)}
+      />
+
+      <UserGuideModal
+        isOpen={showUserGuide}
+        onClose={() => setShowUserGuide(false)}
+      />
+
+      <AboutUsModal
+        isOpen={showAboutUs}
+        onClose={() => setShowAboutUs(false)}
       />
 
       <ExplanationModal
