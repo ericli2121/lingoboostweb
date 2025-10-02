@@ -240,6 +240,181 @@ export const UserGuideModal: React.FC<UserGuideModalProps> = ({
               </div>
             </section>
 
+            <section className="mb-8">
+              <h3 className="text-xl font-semibold text-slate-800 mb-4">📚 Additional Language Learning Resources</h3>
+              <div className="space-y-6 text-slate-700">
+                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6">
+                  <h4 className="text-lg font-medium text-indigo-800 mb-3">🎯 Complementary Learning Tools</h4>
+                  <p className="text-indigo-700 mb-4">
+                    While RapidLingo focuses on sentence construction, these resources can help you build a comprehensive language learning foundation:
+                  </p>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white border border-indigo-100 rounded-lg p-4">
+                      <h5 className="font-medium text-indigo-800 mb-2">📖 Grammar & Vocabulary</h5>
+                      <ul className="text-sm text-indigo-600 space-y-1">
+                        <li>• <a href="https://www.duolingo.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Duolingo</a> - Gamified lessons</li>
+                        <li>• <a href="https://www.babbel.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Babbel</a> - Structured courses</li>
+                        <li>• <a href="https://www.memrise.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Memrise</a> - Vocabulary building</li>
+                        <li>• <a href="https://apps.ankiweb.net" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Anki</a> - Spaced repetition flashcards</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white border border-indigo-100 rounded-lg p-4">
+                      <h5 className="font-medium text-indigo-800 mb-2">🎧 Listening & Speaking</h5>
+                      <ul className="text-sm text-indigo-600 space-y-1">
+                        <li>• <a href="https://www.pimsleur.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Pimsleur</a> - Audio-based learning</li>
+                        <li>• <a href="https://www.rosettastone.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Rosetta Stone</a> - Immersive method</li>
+                        <li>• <a href="https://www.hellotalk.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">HelloTalk</a> - Language exchange</li>
+                        <li>• <a href="https://www.tandem.net" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Tandem</a> - Conversation practice</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white border border-indigo-100 rounded-lg p-4">
+                      <h5 className="font-medium text-indigo-800 mb-2">📺 Media & Culture</h5>
+                      <ul className="text-sm text-indigo-600 space-y-1">
+                        <li>• <a href="https://www.netflix.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Netflix</a> - Foreign films with subtitles</li>
+                        <li>• <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">YouTube</a> - Language learning channels</li>
+                        <li>• <a href="https://www.spotify.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Podcasts</a> - Target language content</li>
+                        <li>• <a href="https://www.bbc.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">News websites</a> - Current events</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white border border-indigo-100 rounded-lg p-4">
+                      <h5 className="font-medium text-indigo-800 mb-2">📚 Reading & Writing</h5>
+                      <ul className="text-sm text-indigo-600 space-y-1">
+                        <li>• <a href="https://www.lingq.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">LingQ</a> - Reading with translation</li>
+                        <li>• <a href="https://www.beelinguapp.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Beelinguapp</a> - Parallel text reading</li>
+                        <li>• <a href="https://langcorrect.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">LangCorrect</a> - Writing practice</li>
+                        <li>• <a href="https://www.gradedreaders.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 underline">Graded readers</a> - Leveled books</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-6">
+                  <h4 className="text-lg font-medium text-emerald-800 mb-3">🌍 Language-Specific Resources</h4>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="bg-white border border-emerald-100 rounded-lg p-4">
+                      <h5 className="font-medium text-emerald-800 mb-2">🇪🇸 Spanish</h5>
+                      <ul className="text-sm text-emerald-600 space-y-1">
+                        <li>• <a href="https://www.spanishdict.com" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">SpanishDict</a> - Dictionary & grammar</li>
+                        <li>• <a href="https://www.newsinslowspanish.com" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">News in Slow Spanish</a> - Current events</li>
+                        <li>• <a href="https://coffeebreaklanguages.com/spanish" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">Coffee Break Spanish</a> - Podcast series</li>
+                        <li>• <a href="https://www.learner.org/series/destinos" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">Destinos</a> - Educational TV series</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white border border-emerald-100 rounded-lg p-4">
+                      <h5 className="font-medium text-emerald-800 mb-2">🇫🇷 French</h5>
+                      <ul className="text-sm text-emerald-600 space-y-1">
+                        <li>• <a href="https://apprendre.tv5monde.com" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">TV5Monde</a> - French learning platform</li>
+                        <li>• <a href="https://savoirs.rfi.fr" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">RFI Savoirs</a> - French news & lessons</li>
+                        <li>• <a href="https://www.frenchpod101.com" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">FrenchPod101</a> - Audio lessons</li>
+                        <li>• <a href="https://www.lemonde.fr" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">Le Monde</a> - French newspaper</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white border border-emerald-100 rounded-lg p-4">
+                      <h5 className="font-medium text-emerald-800 mb-2">🇩🇪 German</h5>
+                      <ul className="text-sm text-emerald-600 space-y-1">
+                        <li>• <a href="https://www.dw.com/en/learn-german/s-2469" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">Deutsche Welle</a> - German learning</li>
+                        <li>• <a href="https://www.goethe.de" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">Goethe Institut</a> - Official resources</li>
+                        <li>• <a href="https://www.germanpod101.com" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">GermanPod101</a> - Audio lessons</li>
+                        <li>• <a href="https://www.spiegel.de" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 underline">Der Spiegel</a> - German news magazine</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-6">
+                  <h4 className="text-lg font-medium text-amber-800 mb-3">💡 Learning Strategies & Tips</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-white border border-amber-100 rounded-lg p-4">
+                      <h5 className="font-medium text-amber-800 mb-2">📅 Daily Practice Routine</h5>
+                      <ul className="text-sm text-amber-600 space-y-1">
+                        <li>• <strong>Morning:</strong> 15 minutes of RapidLingo sentence practice</li>
+                        <li>• <strong>Lunch:</strong> Listen to target language podcasts or music</li>
+                        <li>• <strong>Evening:</strong> Watch 20 minutes of foreign content with subtitles</li>
+                        <li>• <strong>Before bed:</strong> Review vocabulary with flashcards</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white border border-amber-100 rounded-lg p-4">
+                      <h5 className="font-medium text-amber-800 mb-2">🎯 Effective Learning Techniques</h5>
+                      <ul className="text-sm text-amber-600 space-y-1">
+                        <li>• <strong>Spaced Repetition:</strong> Review material at increasing intervals</li>
+                        <li>• <strong>Active Recall:</strong> Test yourself instead of just re-reading</li>
+                        <li>• <strong>Contextual Learning:</strong> Learn words in sentences, not isolation</li>
+                        <li>• <strong>Immersive Practice:</strong> Change device language settings</li>
+                        <li>• <strong>Progress Tracking:</strong> Keep a learning journal</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                  <h4 className="text-lg font-medium text-purple-800 mb-3">🤝 Community & Support</h4>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white border border-purple-100 rounded-lg p-4">
+                      <h5 className="font-medium text-purple-800 mb-2">💬 Language Exchange</h5>
+                      <ul className="text-sm text-purple-600 space-y-1">
+                        <li>• <a href="https://www.hellotalk.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">HelloTalk</a> - Chat with native speakers</li>
+                        <li>• <a href="https://www.tandem.net" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">Tandem</a> - Video calls and messaging</li>
+                        <li>• <a href="https://www.conversationexchange.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">ConversationExchange</a> - Find language partners</li>
+                        <li>• <a href="https://www.meetup.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">Meetup</a> - Local language groups</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white border border-purple-100 rounded-lg p-4">
+                      <h5 className="font-medium text-purple-800 mb-2">📱 Mobile Apps</h5>
+                      <ul className="text-sm text-purple-600 space-y-1">
+                        <li>• <a href="https://translate.google.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">Google Translate</a> - Quick translations</li>
+                        <li>• <a href="https://www.wordreference.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">WordReference</a> - Comprehensive dictionary</li>
+                        <li>• <a href="https://forvo.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">Forvo</a> - Pronunciation guide</li>
+                        <li>• <a href="https://www.linguee.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">Linguee</a> - Contextual translations</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-rose-50 to-red-50 border border-rose-200 rounded-lg p-6">
+                  <h4 className="text-lg font-medium text-rose-800 mb-3">📊 Measuring Progress</h4>
+                  
+                  <div className="space-y-3">
+                    <p className="text-rose-700">
+                      Track your language learning journey with these milestones and metrics:
+                    </p>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-white border border-rose-100 rounded-lg p-4">
+                        <h5 className="font-medium text-rose-800 mb-2">📈 Progress Indicators</h5>
+                        <ul className="text-sm text-rose-600 space-y-1">
+                          <li>• RapidLingo accuracy rate improvement</li>
+                          <li>• Number of sentences completed daily</li>
+                          <li>• Time spent practicing per session</li>
+                          <li>• Themes mastered and vocabulary learned</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-white border border-rose-100 rounded-lg p-4">
+                        <h5 className="font-medium text-rose-800 mb-2">🎯 Milestone Goals</h5>
+                        <ul className="text-sm text-rose-600 space-y-1">
+                          <li>• Week 1: Complete 50 sentences</li>
+                          <li>• Month 1: Master 3 themes</li>
+                          <li>• Month 3: 80%+ accuracy rate</li>
+                          <li>• Month 6: Hold basic conversations</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <div className="border-t border-slate-200 pt-6 mt-8 text-center">
               <p className="text-lg font-medium text-slate-800 mb-2">Ready to start your language learning journey?</p>
               <p className="text-slate-600">

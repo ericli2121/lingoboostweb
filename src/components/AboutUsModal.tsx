@@ -118,9 +118,9 @@ export const AboutUsModal: React.FC<AboutUsModalProps> = ({
                     This contextual approach helps you learn words that are relevant to your interests and needs.
                   </p>
                   <ul className="list-disc list-inside ml-4 space-y-1 text-slate-600">
-                    <li>60+ carefully curated themes</li>
+                    <li>Customisable themes</li>
                     <li>Real-world vocabulary and phrases</li>
-                    <li>Progressive difficulty levels</li>
+                    <li>Customisable difficulty levels</li>
                     <li>Cultural context and usage examples</li>
                   </ul>
                 </div>
@@ -161,7 +161,7 @@ export const AboutUsModal: React.FC<AboutUsModalProps> = ({
                   
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
                     <h4 className="text-lg font-medium text-purple-800 mb-2">AI & Analytics</h4>
-                    <p className="text-purple-600 text-sm">OpenAI GPT</p>
+                    <p className="text-purple-600 text-sm">Mistral</p>
                     <p className="text-purple-600 text-sm">Google Analytics</p>
                     <p className="text-purple-600 text-sm">Performance Monitoring</p>
                   </div>
@@ -203,19 +203,19 @@ export const AboutUsModal: React.FC<AboutUsModalProps> = ({
               <h3 className="text-xl font-semibold text-slate-800 mb-4">📊 Impact & Statistics</h3>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">60+</div>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">1000+</div>
                   <p className="text-blue-800 font-medium">Learning Themes</p>
                   <p className="text-blue-600 text-sm">Covering diverse topics</p>
                 </div>
                 
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">10+</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">100+</div>
                   <p className="text-green-800 font-medium">Languages</p>
                   <p className="text-green-600 text-sm">Supported worldwide</p>
                 </div>
                 
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">1000+</div>
+                  <div className="text-3xl font-bold text-purple-600 mb-2">10000+</div>
                   <p className="text-purple-800 font-medium">Sentences</p>
                   <p className="text-purple-600 text-sm">AI-generated content</p>
                 </div>
@@ -225,7 +225,7 @@ export const AboutUsModal: React.FC<AboutUsModalProps> = ({
             <section className="mb-8">
               <h3 className="text-xl font-semibold text-slate-800 mb-4">🔮 Future Roadmap</h3>
               <div className="space-y-4 text-slate-700">
-                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
+    {/*             <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
                   <h4 className="text-lg font-medium text-yellow-800 mb-2">Coming Soon</h4>
                   <ul className="list-disc list-inside ml-4 space-y-1 text-yellow-700">
                     <li>Voice recognition for pronunciation practice</li>
@@ -233,7 +233,7 @@ export const AboutUsModal: React.FC<AboutUsModalProps> = ({
                     <li>Social features and learning communities</li>
                     <li>Offline mode for uninterrupted learning</li>
                   </ul>
-                </div>
+                </div> */}
                 
                 <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-4">
                   <h4 className="text-lg font-medium text-teal-800 mb-2">Long-term Vision</h4>
