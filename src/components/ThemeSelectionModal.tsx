@@ -135,13 +135,11 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       
       // Map language codes to common speech synthesis language codes
       const targetLanguageCodes = LANGUAGE_SPEECH_MAPPING[localToLanguage] || [localToLanguage];
-      
       const hasVoice = voices.some(voice => 
         targetLanguageCodes.some(code => 
           voice.lang.toLowerCase().startsWith(code.toLowerCase().split('-')[0])
         )
       );
-      
       setHasToLanguageAudio(hasVoice);
     } else {
       setHasToLanguageAudio(false);
@@ -149,7 +147,6 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   };
 
   const loadSuggestedThemes = async () => {
-    console.log("[loadSuggestedThemes] Starting to load themes for language:", localToLanguage);
     setIsLoadingThemes(true);
     setThemesRetryStatus('');
     try {

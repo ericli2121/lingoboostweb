@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Statistics, WordItem } from './types';
 import { initializeGameState, checkCompletion, moveWordToConstruction, removeWordFromConstruction } from './utils/gameLogic';
 import { speechService } from './utils/speech';
-import { loadStatistics, saveStatistics } from './utils/storage';
+import { loadStatistics, saveStatistics, loadLanguagePreferences, saveLanguagePreferences, LanguagePreferences } from './utils/storage';
 import { WordButton } from './components/WordButton';
 import { ConstructionArea } from './components/ConstructionArea';
 import { ActionButtons } from './components/ActionButtons';
@@ -18,7 +18,7 @@ import { AboutUsModal } from './components/AboutUsModal';
 import { supabase } from './utils/supabase';
 import { User } from '@supabase/supabase-js';
 import { explainSentence } from './utils/api';
-import { generateNewThemeQueue, saveCompletedSentence, Translation } from './utils/translations';
+import { generateNewThemeQueue, saveCompletedSentence, Translation, getUserLanguagePreferences } from './utils/translations';
 import { COMMON_LANGUAGES, MOST_COMMON_LANGUAGES } from './data/languages';
 import { 
   initializeAnalytics, 
@@ -48,18 +48,65 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      const previousUser = user;
       setUser(session?.user ?? null);
-      
-      // Reset session counter only when user logs in (was null, now has user)
-      // if (!previousUser && session?.user) {
-      //   console.log('🔄 [Session] Resetting session counter due to auth state change');
-      //   setSessionSentencesCompleted(0);
-      // }
     });
 
+    const loadUserLanguagePreferences = async () => {
+      // Skip if we've already loaded preferences for this user
+      if (hasLoadedLanguagePrefs.current) {
+        return;
+      }
+
+      if (user) {
+        setIsLoadingLanguagePrefs(true);
+        try {
+          // First try to load from database
+          const dbPrefs = await getUserLanguagePreferences(user.id);
+          
+          if (dbPrefs.error) {
+            console.warn('Failed to load language preferences from DB, using localStorage:', dbPrefs.error);
+            // Fallback to localStorage
+            const localPrefs = loadLanguagePreferences();
+            setFromLanguage(localPrefs.fromLanguage);
+            setToLanguage(localPrefs.toLanguage);
+          } else {
+            // Use database preferences
+            setFromLanguage(dbPrefs.fromLanguage);
+            setToLanguage(dbPrefs.toLanguage);
+            
+            // Save to localStorage as backup
+            saveLanguagePreferences({
+              fromLanguage: dbPrefs.fromLanguage,
+              toLanguage: dbPrefs.toLanguage
+            });
+          }
+        } catch (error) {
+          console.error('Error loading language preferences:', error);
+          // Fallback to localStorage
+          const localPrefs = loadLanguagePreferences();
+          setFromLanguage(localPrefs.fromLanguage);
+          setToLanguage(localPrefs.toLanguage);
+        } finally {
+          setIsLoadingLanguagePrefs(false);
+          hasLoadedLanguagePrefs.current = true;
+        }
+      } else {
+        // No user, load from localStorage
+        const localPrefs = loadLanguagePreferences();
+        setFromLanguage(localPrefs.fromLanguage);
+        setToLanguage(localPrefs.toLanguage);
+        hasLoadedLanguagePrefs.current = true;
+      }
+    };
+
+    // Reset the flag when user changes
+    hasLoadedLanguagePrefs.current = false;
+    loadUserLanguagePreferences();
+    
     return () => subscription.unsubscribe();
-  }, [user]);
+  }, []); // Remove user dependency to prevent infinite loop
+
+ 
 
   // Initialize Google Analytics
   useEffect(() => {
@@ -92,6 +139,8 @@ function App() {
   // Add missing state and constants
   const [fromLanguage, setFromLanguage] = useState('en');
   const [toLanguage, setToLanguage] = useState('es');
+  const [isLoadingLanguagePrefs, setIsLoadingLanguagePrefs] = useState(false);
+  const hasLoadedLanguagePrefs = useRef(false);
   const [sentenceLength, setSentenceLength] = useState(3);
   const [numberOfExercises, setNumberOfExercises] = useState(10);
   const [repetitions, setRepetitions] = useState(2);
@@ -472,6 +521,21 @@ function App() {
     setShowThemeSelection(true);
   }, []);
 
+  // Save language preferences when they change
+  const saveLanguagePreferencesToStorage = useCallback((fromLang: string, toLang: string) => {
+    const prefs: LanguagePreferences = {
+      fromLanguage: fromLang,
+      toLanguage: toLang
+    };
+    
+    // Save to localStorage
+    saveLanguagePreferences(prefs);
+    
+    // If user is logged in, we could also save to database here
+    // For now, we'll let the database preferences be determined by translation history
+    console.log(`💾 [LanguagePrefs] Saved language preferences: ${fromLang} -> ${toLang}`);
+  }, []);
+
   const handleThemeSelected = useCallback((theme: string, newFromLanguage: string, newToLanguage: string, newSentenceLength: number, newNumberOfExercises: number, newRepetitions: number) => {
     console.log(`🎨 [App] Theme and settings selected:`, { theme, newFromLanguage, newToLanguage, newSentenceLength, newNumberOfExercises, newRepetitions });
     
@@ -485,11 +549,14 @@ function App() {
     setNumberOfExercises(newNumberOfExercises);
     setRepetitions(newRepetitions);
     
+    // Save language preferences to storage
+    saveLanguagePreferencesToStorage(newFromLanguage, newToLanguage);
+    
     // Then generate queue with the new settings (pass them directly to avoid state timing issues)
     generateQueueForTheme(theme, newFromLanguage, newToLanguage, newSentenceLength, newNumberOfExercises, newRepetitions);
       // Close the modal to reset local state
       setShowThemeSelection(false);
-  }, [generateQueueForTheme]);
+  }, [generateQueueForTheme, saveLanguagePreferencesToStorage]);
 
   const handleThemeSelectionClose = useCallback(() => {
     setShowThemeSelection(false);

@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { generateThemeQueue } from './api';
+import { COMMON_LANGUAGES } from '../data/languages';
 
 export interface Translation {
   from_sentence: string;
@@ -15,6 +16,25 @@ export interface CompletedSentenceRecord {
   from_sentence: string;
   to_sentence: string;
   number_of_times_correct?: number;
+}
+
+/**
+ * Convert language name to language code
+ */
+function getLanguageCode(languageName: string): string {
+  if (!languageName) return 'en';
+  
+  // If it's already a code (2-3 characters), return as is
+  if (languageName.length <= 3) {
+    return languageName.toLowerCase();
+  }
+  
+  // Find the language code by name
+  const language = COMMON_LANGUAGES.find(lang => 
+    lang.name.toLowerCase() === languageName.toLowerCase()
+  );
+  
+  return language?.code || 'en';
 }
 
 /**
@@ -225,5 +245,53 @@ export async function fetchUserHistory(
   } catch (error) {
     console.error('❌ [History] Error in fetchUserHistory:', error);
     throw error;
+  }
+}
+
+/**
+ * Get user's most recent language preferences from their translation history
+ */
+export async function getUserLanguagePreferences(
+  userId: string
+): Promise<{ fromLanguage: string; toLanguage: string; error?: string }> {
+  try {
+    console.log(`🌐 [LanguagePrefs] Fetching language preferences for user ${userId}`);
+    
+    // Get the most recent translation entry to determine preferred languages
+    const { data, error } = await supabase
+      .from('translations')
+      .select('from_language, to_language')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      // If no translations exist, return default values
+      if (error.code === 'PGRST116') {
+        console.log('🌐 [LanguagePrefs] No translation history found, using defaults');
+        return { fromLanguage: 'en', toLanguage: 'es' };
+      }
+      console.error('❌ [LanguagePrefs] Error fetching language preferences:', error);
+      return { fromLanguage: 'en', toLanguage: 'es', error: error.message };
+    }
+
+    if (data) {
+      console.log(`✅ [LanguagePrefs] Found preferences: ${data.from_language} -> ${data.to_language}`);
+      return { 
+        fromLanguage: getLanguageCode(data.from_language || 'en'), 
+        toLanguage: getLanguageCode(data.to_language || 'es') 
+      };
+    }
+
+    // Fallback to defaults
+    return { fromLanguage: 'en', toLanguage: 'es' };
+  } catch (error) {
+    console.error('❌ [LanguagePrefs] Error in getUserLanguagePreferences:', error);
+    return { 
+      fromLanguage: 'en', 
+      toLanguage: 'es', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
 }
