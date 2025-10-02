@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_ADSENSE_CLIENT: string
   readonly VITE_GOOGLE_ADSENSE_SLOT: string
+  readonly VITE_GOOGLE_ADSENSE_SLOT_LOADING_PAGE: string
   readonly VITE_BASE_URL: string
 }
 

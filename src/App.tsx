@@ -698,21 +698,24 @@ function App() {
         )}
 
         {/* Google AdSense Ads - Below Action Buttons */}
-        <div className={`mt-2 bg-yellow-300 p-1 ${gameState && !isLoadingTranslations ? 'block' : 'hidden'}`}>
-         {/*  <GoogleAd
-            dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT || '1234567890'}
-            dataAdFormat="horizontal"
-            dataFullWidthResponsive={true}
-            style={{ 
-              display: 'block', 
-              textAlign: 'center',
-              minHeight: '60px',
-              maxHeight: '5vh',
-              width: '100%'
-            }}
-            className="mt-1 mb-1"
-          /> */}
-        </div>
+        {gameState && !isLoadingTranslations && (
+          <div className="mt-2 bg-yellow-300 p-1">
+            <GoogleAd
+              dataAdSlot={import.meta.env.VITE_GOOGLE_ADSENSE_SLOT || '1234567890'}
+              dataAdFormat="horizontal"
+              dataFullWidthResponsive={true}
+              style={{ 
+                display: 'block', 
+                textAlign: 'center',
+                minHeight: '90px',
+                width: '100%',
+                maxWidth: '728px',
+                margin: '0 auto'
+              }}
+              className="mt-1 mb-1"
+            />
+          </div>
+        )}
       </main>
 
       {/* Modals */}
@@ -786,9 +789,10 @@ function App() {
           style={{ 
             display: 'block', 
             textAlign: 'center',
-            minHeight: '60px',
-            maxHeight: '15vh',
-            width: '100%'
+            minHeight: '90px',
+            width: '100%',
+            maxWidth: '728px',
+            margin: '0 auto'
           }}
           className="mt-1 mb-1"
         />
