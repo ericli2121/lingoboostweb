@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "budoux": "^0.7.0",
     "framer-motion": "^10.16.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
